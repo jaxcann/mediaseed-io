@@ -3,51 +3,33 @@ import { SectionHeader } from "./SectionHeader";
 import { Spotlight } from "./Spotlight";
 import { ReelEmbed, type Reel } from "./ReelEmbed";
 
+// Each entry can later carry a `videoSrc: "/videos/reel-XX.mp4"` (self-hosted, recommended)
+// or a `reelId: "..."` (Instagram embed). With neither set, the tile renders the
+// "Reel coming soon" placeholder.
 const reels: Reel[] = [
   {
-    client: "Vascular Surgical Associates",
-    handle: "vascularsurgicalatl",
-    description:
-      "\"Prevention is powerful.\" A flagship messaging reel reframing vascular care from reactive to proactive.",
-    metric: "Series anchor · written with the surgeons",
-    reelId: "DJciayBvtxm",
+    client: "Vascular surgical practice",
+    description: "Patient education reel — clinical content with a screen-stop hook.",
   },
   {
-    client: "Vascular Surgical Associates",
-    handle: "vascularsurgicalatl",
-    description:
-      "Patient education on clotted dialysis access — a niche topic, written so it actually lands.",
-    metric: "Top patient-education performer",
-    reelId: "DKNWHQ_vx4j",
+    client: "Vascular surgical practice",
+    description: "Procedure explainer, written with the surgeons.",
   },
   {
-    client: "Vascular Surgical Associates",
-    handle: "vascularsurgicalatl",
-    description:
-      "A quick look at carotid arteries, in 30 seconds. Clinical content with a screen-stop hook.",
-    metric: "Driver of new screening inquiries",
-    reelId: "DKRmrFHATbo",
+    client: "Vascular surgical practice",
+    description: "Recurring messaging series — built to compound week over week.",
   },
   {
-    client: "AllSmiles Family & Cosmetic Dentistry",
-    handle: "allsmilesnorthga",
-    description:
-      "Cosmetic case content for AllSmiles in Cumming — the visual rebuild from the ground up.",
-    metric: "4.2× follower growth · 6 months",
+    client: "Dentist",
+    description: "Cosmetic case content shot on-site, structured for compliance.",
   },
   {
-    client: "AllSmiles Family & Cosmetic Dentistry",
-    handle: "allsmilesnorthga",
-    description:
-      "Family and comfort-care vignettes shot on-site, structured around dental compliance.",
-    metric: "26 booked consults from social",
+    client: "Dentist",
+    description: "Family and comfort-care vignettes from the operatory.",
   },
   {
-    client: "View Finders (PBS)",
-    handle: "viewfinderstv",
-    description:
-      "Field shooting and post for the Emmy-nominated PBS series with Chris Greer & Paul Daniel.",
-    metric: "Air date: PBS · Create TV",
+    client: "TV show",
+    description: "Field shooting and post for an ongoing regional series.",
   },
 ];
 
@@ -60,14 +42,14 @@ export function Work() {
           heading={
             <>
               Selected work.
-              <span className="text-muted"> Reels and stories shipped over the last year.</span>
+              <span className="text-muted"> A small wall of recent reels.</span>
             </>
           }
         />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
           {reels.map((reel, i) => (
-            <Reveal key={`${reel.handle}-${i}`} delay={(i % 3) * 80}>
+            <Reveal key={`reel-${i}`} delay={(i % 3) * 80}>
               <Spotlight className="rounded-xl" size={420}>
                 <ReelEmbed reel={reel} index={i + 1} total={reels.length} />
               </Spotlight>
@@ -77,7 +59,7 @@ export function Work() {
 
         <Reveal delay={200}>
           <p className="mt-12 font-mono text-[11px] tracking-[0.14em] uppercase text-muted-strong">
-            Tap any tile to play. More on request — much of our best work lives behind patient consent.
+            Specific examples available on request — most work lives behind patient consent.
           </p>
         </Reveal>
       </div>

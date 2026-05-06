@@ -2,16 +2,16 @@ import { Reveal } from "./Reveal";
 
 const items = [
   {
-    name: "Vascular Surgical Associates",
-    detail: "Vascular surgery, Atlanta · social + web",
+    name: "Vascular surgical practice",
+    detail: "Social + web · ongoing",
   },
   {
-    name: "AllSmiles Dental",
-    detail: "Cosmetic dentistry, Cumming GA · social",
+    name: "Dentist",
+    detail: "Social · ongoing",
   },
   {
-    name: "PBS Viewfinders",
-    detail: "Production · post-production credit",
+    name: "TV show",
+    detail: "Production + post-production credit",
   },
 ];
 

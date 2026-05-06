@@ -37,12 +37,11 @@ export function About() {
               <Reveal delay={160}>
                 <p>
                   Founded by <span className="text-fg">Jax Cannon</span>, who
-                  came up running social for Vascular Surgical Associates as
-                  their first hire in the role and now produces in the field on
-                  PBS's <span className="text-fg italic">Viewfinders</span>. We
-                  work with practices across Georgia — the Atlanta metro and
-                  its surrounding cities, Athens, and anywhere from the
-                  mountains down to the coast.
+                  came up running social for a vascular surgical practice as
+                  their first hire in the role and produces in the field for a
+                  regional TV show. We work with practices across Georgia — the
+                  Atlanta metro and its surrounding cities, Athens, and
+                  anywhere from the mountains down to the coast.
                 </p>
               </Reveal>
 
