@@ -1,0 +1,192 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Prevent iOS Safari from auto-resizing text on orientation change */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  /* iOS rubber-band overscroll background — keep it dark, not white */
+  background-color: #0a0a0a;
+}
+
+body {
+  background-color: #0a0a0a;
+  color: #fafafa;
+  font-feature-settings: "ss01", "cv11";
+  /* Modern overflow chaining */
+  overscroll-behavior-y: none;
+}
+
+/* Suppress the gray flash on tap for touch devices */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Restore a soft accent tap-highlight for clearly interactive elements */
+a,
+button,
+[role="button"] {
+  -webkit-tap-highlight-color: rgba(74, 103, 65, 0.18);
+}
+
+/* iOS Safari zooms in on focused inputs whose font-size < 16px. Force 16px on small viewports. */
+@media (max-width: 640px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
+
+/* Modern line-break balancing on headlines (CSS-native, no JS) */
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+/* Section-eyebrow line: starts collapsed, draws in when ancestor .reveal becomes visible */
+.divider-line {
+  transform-origin: left center;
+  transform: scaleX(0);
+  transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.1s;
+}
+
+.reveal.is-visible .divider-line {
+  transform: scaleX(1);
+}
+
+/* Animated underline on inline links — draws in on hover */
+.link-underline {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 0% 1px;
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  transition: background-size 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.link-underline:hover,
+.link-underline:focus-visible {
+  background-size: 100% 1px;
+}
+
+/* Hide the system cursor on devices that have a hover-capable cursor — our follower replaces it.
+   Touch / coarse-pointer devices keep their native cursor. */
+@media (hover: hover) and (pointer: fine) {
+  /* Disabled by default; enable per-app when CursorFollower is mounted. We keep system cursor visible
+     for now since the follower is a complement, not a replacement. */
+}
+
+/* Slow-bloom pulse for accent dots inside a DotField */
+@keyframes dot-bloom {
+  0%,
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.6);
+    box-shadow: 0 0 0 0 rgba(74, 103, 65, 0);
+  }
+  50% {
+    opacity: 0.95;
+    transform: translate(-50%, -50%) scale(1.35);
+    box-shadow: 0 0 14px 1px rgba(74, 103, 65, 0.45);
+  }
+}
+
+/* Soft "ping" for inline live-indicator dots — gentler than tailwind's default ping */
+@keyframes ping-soft {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  80%,
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+.animate-ping-soft {
+  animation: ping-soft 2.4s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* Section reveal — opacity-only fade so layout doesn't shift on initial paint */
+.reveal {
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .animate-ping-soft,
+  [style*="dot-bloom"] {
+    animation: none !important;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* Selection */
+::selection {
+  background: #4a6741;
+  color: #fafafa;
+}
+
+/* Subtle scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0a0a0a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1f1f1f;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2a2a2a;
+}
+
+/* Form inputs reset */
+input,
+textarea,
+button {
+  font-family: inherit;
+}
+
+input:focus-visible,
+textarea:focus-visible {
+  outline: none;
+  border-color: #4a6741;
+}
