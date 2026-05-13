@@ -16,9 +16,6 @@ export function About() {
                 <br />
                 Mediaseed.
               </h2>
-              <p className="mt-6 sm:mt-8 font-mono text-[10px] sm:text-[11px] tracking-[0.14em] uppercase text-muted-strong">
-                Bonsai, not billboards.
-              </p>
             </Reveal>
           </div>
 
@@ -27,31 +24,21 @@ export function About() {
               <Reveal delay={80}>
                 <p>
                   We're a small studio building social, content, and web for
-                  practices that take the long view. The model is bonsai — we
-                  start from seed, prune in the right places, and water the
-                  account every day. The work compounds because someone is
-                  actually paying attention to it, every week, for years.
+                  practices that take the long view. We work the account every
+                  day — real posting, real production, real strategy, all
+                  written by people who actually care about the practice. The
+                  work compounds because someone is paying close attention,
+                  every week, for years.
                 </p>
               </Reveal>
 
               <Reveal delay={160}>
                 <p>
-                  Founded by <span className="text-fg">Jax Cannon</span>, who
-                  came up running social for a vascular surgical practice as
-                  their first hire in the role and produces in the field for a
-                  regional TV show. We work with practices across Georgia — the
-                  Atlanta metro and its surrounding cities, Athens, and
-                  anywhere from the mountains down to the coast.
-                </p>
-              </Reveal>
-
-              <Reveal delay={240}>
-                <p>
                   We work best with practices that are willing to show up on
-                  camera, trust a process that takes a few months to root, and
-                  measure the right things. We're not a fit for accounts
-                  chasing one viral post or a generic agency look. Patient
-                  practices, patient growth.
+                  camera, trust a process that takes a few months to take
+                  hold, and measure the right things. We're not a fit for
+                  accounts chasing one viral post or a generic agency look.
+                  Patient practices, patient growth.
                 </p>
               </Reveal>
             </div>
