@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 
 export function CursorFollower() {
+  const pathname = usePathname();
   const dotRef = useRef<HTMLDivElement>(null);
   const target = useRef({ x: -100, y: -100 });
   const current = useRef({ x: -100, y: -100 });
@@ -53,6 +55,10 @@ export function CursorFollower() {
       if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
     };
   }, [visible, hovering]);
+
+  // The DayTapes microsite has its own visual identity; the studio cursor
+  // dot would clash with the orange brand, so we hide it on those routes.
+  if (pathname?.startsWith("/daytapes")) return null;
 
   return (
     <div

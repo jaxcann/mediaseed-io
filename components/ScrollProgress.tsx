@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 
 export function ScrollProgress() {
+  const pathname = usePathname();
   const barRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number | null>(null);
 
@@ -33,6 +35,10 @@ export function ScrollProgress() {
       if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
     };
   }, []);
+
+  // The DayTapes microsite has its own visual identity; the studio progress
+  // bar would clash with the orange brand, so we hide it on those routes.
+  if (pathname?.startsWith("/daytapes")) return null;
 
   return (
     <div

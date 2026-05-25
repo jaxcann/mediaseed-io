@@ -1,4 +1,5 @@
-import { ArrowUpRight } from "lucide-react";
+import Link from "next/link";
+import { ArrowUpRight, ArrowRight } from "lucide-react";
 import { Reveal } from "./Reveal";
 import { Spotlight } from "./Spotlight";
 
@@ -37,15 +38,22 @@ function StatusPill({ status }: { status: "live" | "dev" }) {
 
 export function AppCard({ app, delay = 0 }: { app: AppEntry; delay?: number }) {
   const isLive = app.status === "live";
-  const Outer: React.ElementType = isLive && app.href ? "a" : "div";
-  const outerProps =
-    isLive && app.href
-      ? {
-          href: app.href,
-          target: "_blank",
-          rel: "noopener noreferrer",
-        }
-      : {};
+  const hasLink = Boolean(app.href);
+  const isInternal = hasLink && app.href!.startsWith("/");
+
+  const Outer: React.ElementType = hasLink
+    ? isInternal
+      ? Link
+      : "a"
+    : "div";
+  const outerProps = hasLink
+    ? isInternal
+      ? { href: app.href }
+      : { href: app.href, target: "_blank", rel: "noopener noreferrer" }
+    : {};
+
+  // CTA arrow: internal route → ArrowRight, external → ArrowUpRight
+  const CtaArrow = isInternal ? ArrowRight : ArrowUpRight;
 
   return (
     <Reveal delay={delay}>
@@ -53,7 +61,7 @@ export function AppCard({ app, delay = 0 }: { app: AppEntry; delay?: number }) {
         <Outer
           {...outerProps}
           className={`group block rounded-xl border border-border bg-bg-elevated/40 overflow-hidden transition-colors duration-300 ${
-            isLive ? "hover:border-accent" : "hover:border-border-strong"
+            hasLink ? "hover:border-accent cursor-pointer" : "hover:border-border-strong"
           }`}
         >
           <div className="grid grid-cols-1 md:grid-cols-12 gap-0 md:gap-8 p-6 sm:p-7 md:p-10">
@@ -99,12 +107,16 @@ export function AppCard({ app, delay = 0 }: { app: AppEntry; delay?: number }) {
               )}
 
               <div className="mt-7 sm:mt-8 md:mt-10 flex items-center gap-2 text-sm font-medium">
-                {isLive && app.href ? (
+                {hasLink ? (
                   <span className="inline-flex items-center gap-1.5 text-fg group-hover:text-accent transition-colors">
-                    {app.cta ?? "View in App Store"}
-                    <ArrowUpRight
+                    {app.cta ?? (isLive ? "View in App Store" : "Visit site")}
+                    <CtaArrow
                       size={15}
-                      className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                      className={`transition-transform ${
+                        isInternal
+                          ? "group-hover:translate-x-0.5"
+                          : "group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                      }`}
                     />
                   </span>
                 ) : (

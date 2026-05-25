@@ -33,14 +33,15 @@ const apps: Omit<AppEntry, "index" | "total">[] = [
     cta: "View in App Store",
   },
   {
-    name: "Day Tapes",
-    tagline: "A daily tape, kept simply.",
+    name: "DayTapes",
+    tagline: "Your whole day, on one tape.",
     description:
-      "A small daily ritual app, in active development. Built for people who want to mark a day with sound and a few words, then move on. Quiet by design — same patient bias as the rest of the studio's work.",
+      "Catch your day in tiny moments — photos, 3-second loops, and sticker cut-outs — that stitch into a tape you can play back, then turn into comics, carousels, PunchCards, Tapegrams, and Live Tapes worth sharing. Private by design: everything stays on the phone.",
     status: "dev",
-    platform: "iOS · in development",
-    meta: ["Targeting 2026", "TestFlight soon"],
-    cta: "Releasing soon",
+    platform: "iOS · in active development",
+    meta: ["Targeting 2026", "Private by design", "Made in Georgia"],
+    href: "/daytapes",
+    cta: "Open the site",
   },
   {
     name: "Pocket Pods",

@@ -159,6 +159,19 @@ p {
   color: #fafafa;
 }
 
+/* DayTapes microsite — system-font stack overrides the studio's Geist, and
+   selection switches to the orange brand color. Scoped via .daytapes-root */
+.daytapes-root {
+  font-family:
+    -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Helvetica,
+    Arial, sans-serif;
+}
+
+.daytapes-root ::selection {
+  background: #e8743c;
+  color: #0e0e10;
+}
+
 /* Subtle scrollbar */
 ::-webkit-scrollbar {
   width: 10px;
