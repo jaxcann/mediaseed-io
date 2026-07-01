@@ -21,14 +21,14 @@ export function Contact() {
                 Contact
               </div>
               <h2 className="text-[clamp(2.25rem,8vw,4rem)] md:text-6xl font-medium tracking-tightest leading-[1.02]">
-                Plant
+                Get in
                 <br />
-                something.
+                touch.
               </h2>
               <p className="mt-6 sm:mt-8 text-base text-muted leading-relaxed max-w-md">
-                We onboard a small handful of new practices each quarter. Tell
-                us what you're trying to grow and we'll come back within two
-                business days with a fit assessment and a next step.
+                Open to freelance work, collaborations, or just a conversation
+                about something you&apos;re making. I read every message myself
+                and usually reply within a day.
               </p>
 
               <div className="mt-10 sm:mt-12 space-y-3">
@@ -39,7 +39,7 @@ export function Contact() {
                   jax@mediaseed.io
                 </a>
                 <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-muted-strong">
-                  A Georgia studio · Atlanta metro to Athens & beyond
+                  Based in Georgia · working with people anywhere
                 </p>
               </div>
             </Reveal>
@@ -69,23 +69,6 @@ export function Contact() {
                     />
                   </div>
                   <div>
-                    <label htmlFor="practice" className={labelClass}>
-                      Practice / Business
-                    </label>
-                    <input
-                      id="practice"
-                      name="Practice"
-                      type="text"
-                      required
-                      autoComplete="organization"
-                      placeholder="Practice name"
-                      className={fieldClass}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
-                  <div>
                     <label htmlFor="email" className={labelClass}>
                       Email
                     </label>
@@ -95,48 +78,50 @@ export function Contact() {
                       type="email"
                       required
                       autoComplete="email"
-                      placeholder="you@practice.com"
-                      className={fieldClass}
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="phone" className={labelClass}>
-                      Phone <span className="text-muted-strong normal-case tracking-normal">(optional)</span>
-                    </label>
-                    <input
-                      id="phone"
-                      name="Phone"
-                      type="tel"
-                      autoComplete="tel"
-                      placeholder="—"
+                      placeholder="you@email.com"
                       className={fieldClass}
                     />
                   </div>
                 </div>
 
                 <div>
+                  <label htmlFor="company" className={labelClass}>
+                    Company / context{" "}
+                    <span className="text-muted-strong normal-case tracking-normal">(optional)</span>
+                  </label>
+                  <input
+                    id="company"
+                    name="Company"
+                    type="text"
+                    autoComplete="organization"
+                    placeholder="Where you're coming from"
+                    className={fieldClass}
+                  />
+                </div>
+
+                <div>
                   <label htmlFor="message" className={labelClass}>
-                    What are you trying to grow?
+                    What&apos;s on your mind?
                   </label>
                   <textarea
                     id="message"
                     name="Message"
                     required
                     rows={5}
-                    placeholder="Where the practice is now, where you'd like it to be, and anything you've already tried."
+                    placeholder="A project, a collaboration, a question — whatever it is."
                     className={`${fieldClass} resize-none`}
                   />
                 </div>
 
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-2">
                   <p className="font-mono text-[10px] tracking-[0.14em] uppercase text-muted-strong">
-                    Replies within two business days
+                    I usually reply within a day
                   </p>
                   <button
                     type="submit"
                     className="group flex sm:inline-flex items-center justify-center gap-2 rounded-full bg-accent text-fg px-6 py-4 sm:py-3.5 text-sm font-medium hover:bg-accent-hover transition-colors w-full sm:w-auto"
                   >
-                    Send inquiry
+                    Send message
                     <ArrowRight
                       size={16}
                       className="transition-transform group-hover:translate-x-0.5"

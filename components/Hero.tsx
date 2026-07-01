@@ -18,23 +18,22 @@ export function Hero() {
               <span className="absolute inset-0 rounded-full bg-accent animate-ping-soft" />
               <span className="relative h-1.5 w-1.5 rounded-full bg-accent" />
             </span>
-            A creative studio · Made in Georgia
+            Jax Cannon · Made in Georgia
           </span>
         </div>
 
-        <h1 className="text-[clamp(2.5rem,10vw,8rem)] font-medium tracking-tightest leading-[0.98] sm:leading-[0.95] text-fg max-w-[18ch] sm:max-w-[16ch] animate-fade-up">
-          <span className="md:block">Most agencies sell</span>{" "}
-          <span className="md:block">full-grown content.</span>{" "}
-          <span className="md:block text-muted">We plant from seed.</span>
+        <h1 className="text-[clamp(2.5rem,10vw,8rem)] font-medium tracking-tightest leading-[0.98] sm:leading-[0.95] text-fg max-w-[18ch] sm:max-w-[15ch] animate-fade-up">
+          <span className="md:block">I make things</span>{" "}
+          <span className="md:block text-muted">that grow.</span>
         </h1>
 
         <p
           className="mt-8 sm:mt-10 text-base md:text-xl text-muted max-w-2xl leading-relaxed animate-fade-up"
           style={{ animationDelay: "120ms", animationFillMode: "both", opacity: 0 }}
         >
-          Mediaseed is a small studio building social, content, and web for
-          medical, cosmetic, and hospitality practices — patiently, deliberately,
-          with daily care.
+          I&apos;m Jax — I shoot and edit video, run social that&apos;s crossed a
+          million views, build websites, and design and ship my own iOS apps.
+          This is a portfolio of everything I make.
         </p>
 
         <div
@@ -43,10 +42,10 @@ export function Hero() {
         >
           <MagneticButton strength={10} className="w-full sm:w-auto">
             <a
-              href="#contact"
+              href="#work"
               className="group flex sm:inline-flex items-center justify-center gap-2 rounded-full bg-accent text-fg px-6 py-4 sm:py-3.5 text-sm font-medium hover:bg-accent-hover transition-colors w-full sm:w-auto"
             >
-              Start a project
+              See the work
               <ArrowRight
                 size={16}
                 className="transition-transform group-hover:translate-x-0.5"
@@ -55,10 +54,10 @@ export function Hero() {
           </MagneticButton>
           <MagneticButton strength={6} className="w-full sm:w-auto">
             <a
-              href="#work"
+              href="#contact"
               className="flex sm:inline-flex items-center justify-center gap-2 rounded-full border border-border-strong text-fg px-6 py-4 sm:py-3.5 text-sm font-medium hover:border-accent hover:text-accent transition-colors w-full sm:w-auto"
             >
-              See the work
+              Get in touch
             </a>
           </MagneticButton>
         </div>
@@ -76,12 +75,12 @@ export function Hero() {
             className="hidden sm:inline-block h-1 w-1 rounded-full bg-border-strong"
             aria-hidden="true"
           />
-          <span>2 active practices</span>
+          <span>Software in the App Store</span>
           <span
             className="hidden sm:inline-block h-1 w-1 rounded-full bg-border-strong"
             aria-hidden="true"
           />
-          <span>Est. 2024</span>
+          <span>Shipping daily</span>
         </div>
       </div>
     </section>

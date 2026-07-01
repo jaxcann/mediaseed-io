@@ -1,7 +1,38 @@
+import Link from "next/link";
+import { ArrowUpRight } from "lucide-react";
 import { Reveal } from "./Reveal";
 import { SectionHeader } from "./SectionHeader";
 import { Spotlight } from "./Spotlight";
 import { ReelEmbed, type Reel } from "./ReelEmbed";
+
+type Project = {
+  href: string;
+  name: string;
+  blurb: string;
+  kind: string;
+  external?: boolean;
+};
+
+const projects: Project[] = [
+  {
+    href: "/apps",
+    name: "Apps",
+    blurb: "iOS software I've designed and shipped — Surgepod is live in the App Store.",
+    kind: "Software",
+  },
+  {
+    href: "/daytapes",
+    name: "DayTapes",
+    blurb: "A full product microsite, designed and built from scratch.",
+    kind: "Web · Product",
+  },
+  {
+    href: "/jaxlendar",
+    name: "Jaxlendar",
+    blurb: "A daily log of everything I ship — updated in public, every day.",
+    kind: "Web · Ongoing",
+  },
+];
 
 // Each entry can later carry a `videoSrc: "/videos/reel-XX.mp4"` (self-hosted, recommended)
 // or a `reelId: "..."` (Instagram embed). With neither set, the tile renders the
@@ -42,7 +73,7 @@ export function Work() {
           heading={
             <>
               Selected work.
-              <span className="text-muted"> A small wall of recent reels.</span>
+              <span className="text-muted"> Video first — the rest lives across the site.</span>
             </>
           }
         />
@@ -59,9 +90,49 @@ export function Work() {
 
         <Reveal delay={200}>
           <p className="mt-12 font-mono text-[11px] tracking-[0.14em] uppercase text-muted-strong">
-            Specific examples available on request — most work lives behind patient consent.
+            More reels coming — client video lives behind consent, so this is a sampler.
           </p>
         </Reveal>
+
+        {/* More work — cross-links to the rest of the portfolio */}
+        <div className="mt-16 sm:mt-20">
+          <Reveal>
+            <div className="font-mono text-[11px] tracking-[0.18em] uppercase text-muted-strong mb-6 flex items-center gap-3">
+              <span className="divider-line block h-px w-10 sm:w-12 bg-accent" />
+              More work
+            </div>
+          </Reveal>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 md:gap-6">
+            {projects.map((p, i) => (
+              <Reveal key={p.href} delay={i * 80}>
+                <Spotlight className="rounded-xl h-full">
+                  <Link
+                    href={p.href}
+                    className="group flex h-full flex-col rounded-xl border border-border bg-bg-elevated/40 p-6 md:p-7 transition-colors duration-300 hover:border-accent"
+                  >
+                    <div className="font-mono text-[10px] tracking-[0.18em] uppercase text-muted-strong mb-6">
+                      {p.kind}
+                    </div>
+                    <h3 className="text-2xl md:text-3xl tracking-tight font-medium mb-3">
+                      {p.name}
+                    </h3>
+                    <p className="text-sm text-muted leading-relaxed mb-8">
+                      {p.blurb}
+                    </p>
+                    <span className="mt-auto inline-flex items-center gap-1.5 text-sm font-medium text-fg group-hover:text-accent transition-colors">
+                      Open
+                      <ArrowUpRight
+                        size={15}
+                        className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                      />
+                    </span>
+                  </Link>
+                </Spotlight>
+              </Reveal>
+            ))}
+          </div>
+        </div>
       </div>
     </section>
   );

@@ -42,8 +42,8 @@ export function Footer() {
         </div>
 
         <div className="mt-12 pt-8 border-t border-border flex flex-col md:flex-row md:items-center md:justify-between gap-3 font-mono text-[11px] tracking-[0.14em] uppercase text-muted-strong">
-          <p>© 2026 Mediaseed. A studio in Georgia.</p>
-          <p>Planted from seed.</p>
+          <p>© 2026 Jax Cannon · Mediaseed. Made in Georgia.</p>
+          <p>Always making something.</p>
         </div>
       </div>
     </footer>

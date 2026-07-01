@@ -12,10 +12,11 @@ export function About() {
                 About
               </div>
               <h2 className="text-[clamp(2.25rem,8vw,4rem)] md:text-6xl font-medium tracking-tightest leading-[1.02]">
-                Why
-                <br />
-                Mediaseed.
+                About.
               </h2>
+              <p className="mt-6 sm:mt-8 font-mono text-[10px] sm:text-[11px] tracking-[0.14em] uppercase text-muted-strong">
+                Jax Cannon · Georgia
+              </p>
             </Reveal>
           </div>
 
@@ -23,22 +24,31 @@ export function About() {
             <div className="space-y-6 sm:space-y-7 text-base sm:text-lg leading-relaxed text-fg/85 max-w-xl">
               <Reveal delay={80}>
                 <p>
-                  We're a small studio building social, content, and web for
-                  practices that take the long view. We work the account every
-                  day — real posting, real production, real strategy, all
-                  written by people who actually care about the practice. The
-                  work compounds because someone is paying close attention,
-                  every week, for years.
+                  I&apos;m Jax Cannon, a creative and developer based in Georgia.
+                  I work across a few disciplines that usually sit in separate
+                  lanes: I shoot and edit video, run social, design and build
+                  websites, and write the code for my own iOS apps. Mediaseed is
+                  the name I make all of it under.
                 </p>
               </Reveal>
 
               <Reveal delay={160}>
                 <p>
-                  We work best with practices that are willing to show up on
-                  camera, trust a process that takes a few months to take
-                  hold, and measure the right things. We're not a fit for
-                  accounts chasing one viral post or a generic agency look.
-                  Patient practices, patient growth.
+                  The through-line is making things that grow. I started in
+                  social and took an account from zero past a million views,
+                  picked up a production credit on a regional TV show, and
+                  taught myself to design and ship software along the way — one
+                  app live in the App Store, more in progress.
+                </p>
+              </Reveal>
+
+              <Reveal delay={240}>
+                <p>
+                  I like owning the whole thing — the first frame to the shipped
+                  build. This site is where all of it lives: the video work, the
+                  apps, and a daily log of whatever I&apos;m making next. If
+                  you&apos;ve got something worth building, I&apos;d love to hear
+                  about it.
                 </p>
               </Reveal>
             </div>

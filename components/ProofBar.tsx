@@ -2,23 +2,23 @@ import { Reveal } from "./Reveal";
 
 const items = [
   {
-    name: "Vascular surgical practice",
-    detail: "Social + web · ongoing",
+    name: "Social & content",
+    detail: "1M+ views across healthcare brands",
   },
   {
-    name: "Dentist",
-    detail: "Social · ongoing",
+    name: "Production",
+    detail: "Field + post credit on a regional TV show",
   },
   {
-    name: "TV show",
-    detail: "Production + post-production credit",
+    name: "Software",
+    detail: "iOS apps designed and shipped to the App Store",
   },
 ];
 
 export function ProofBar() {
   return (
     <section
-      aria-label="Selected clients and credits"
+      aria-label="What I do — proof of range"
       className="border-y border-border"
     >
       <div className="mx-auto max-w-content px-5 sm:px-6 md:px-10">

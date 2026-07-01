@@ -7,19 +7,20 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://mediaseed.io"),
-  title: "Mediaseed — Social media + web for practices that take the long view",
+  title: "Mediaseed — Jax Cannon · creative & developer",
   description:
-    "A Georgia creative studio. Social, content, and web for medical, cosmetic, and hospitality practices — Atlanta metro to Athens. Planted from seed, grown deliberately.",
+    "The portfolio of Jax Cannon — video, social, web, and iOS apps, made in Georgia. Content that's crossed a million views, plus software shipped to the App Store.",
   keywords: [
+    "Jax Cannon",
     "Mediaseed",
-    "social media management",
-    "medical marketing",
-    "dental marketing",
+    "portfolio",
+    "creative",
+    "video editor",
+    "content creator",
+    "social media",
+    "web developer",
+    "iOS developer",
     "Georgia",
-    "Atlanta",
-    "Athens GA",
-    "content production",
-    "creative studio",
   ],
   authors: [{ name: "Jax Cannon" }],
   creator: "Jax Cannon",
@@ -28,15 +29,15 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: "https://mediaseed.io",
     siteName: "Mediaseed",
-    title: "Mediaseed — Social media + web for practices that take the long view",
+    title: "Mediaseed — Jax Cannon · creative & developer",
     description:
-      "A Georgia creative studio. Social, content, and web for medical, cosmetic, and hospitality practices — Atlanta metro to Athens. Planted from seed, grown deliberately.",
+      "The portfolio of Jax Cannon — video, social, web, and iOS apps, made in Georgia. Content that's crossed a million views, plus software shipped to the App Store.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Mediaseed",
+    title: "Mediaseed — Jax Cannon",
     description:
-      "Social media + web for practices that take the long view. A studio in Georgia.",
+      "Video, social, web, and iOS apps, made in Georgia. A portfolio of everything I make.",
     creator: "@mediaseed",
   },
   robots: {

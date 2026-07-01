@@ -10,7 +10,6 @@ type NavLink = { href: string; label: string };
 
 const studioLinks: NavLink[] = [
   { href: "/#work", label: "Work" },
-  { href: "/#services", label: "Services" },
   { href: "/#about", label: "About" },
   { href: "/apps", label: "Apps" },
   { href: "/jaxlendar", label: "Jaxlendar" },
@@ -89,7 +88,7 @@ export function Nav() {
                   href={ctaHref}
                   className="text-sm font-medium px-4 py-2 rounded-full bg-fg text-bg hover:bg-accent hover:text-fg transition-colors inline-block"
                 >
-                  Start a Project
+                  Get in touch
                 </Link>
               </MagneticButton>
             </nav>

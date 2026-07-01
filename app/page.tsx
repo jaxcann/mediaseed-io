@@ -1,7 +1,7 @@
 import { Nav } from "@/components/Nav";
 import { Hero } from "@/components/Hero";
 import { ProofBar } from "@/components/ProofBar";
-import { Services } from "@/components/Services";
+import { Capabilities } from "@/components/Capabilities";
 import { Work } from "@/components/Work";
 import { About } from "@/components/About";
 import { Contact } from "@/components/Contact";
@@ -14,7 +14,7 @@ export default function Page() {
       <main>
         <Hero />
         <ProofBar />
-        <Services />
+        <Capabilities />
         <Work />
         <About />
         <Contact />
