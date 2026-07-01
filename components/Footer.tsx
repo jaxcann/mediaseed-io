@@ -17,9 +17,12 @@ export function Footer() {
             mediaseed
           </Link>
 
-          <nav className="flex items-center gap-8 font-mono text-[11px] tracking-[0.14em] uppercase text-muted">
+          <nav className="flex flex-wrap items-center gap-x-6 gap-y-2 font-mono text-[11px] tracking-[0.14em] uppercase text-muted">
             <Link href="/apps" className="hover:text-fg transition-colors">
               Apps
+            </Link>
+            <Link href="/jaxlendar" className="hover:text-fg transition-colors">
+              Jaxlendar
             </Link>
             <a
               href="https://instagram.com/mediaseed"

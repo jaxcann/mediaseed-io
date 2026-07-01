@@ -13,6 +13,7 @@ const studioLinks: NavLink[] = [
   { href: "/#services", label: "Services" },
   { href: "/#about", label: "About" },
   { href: "/apps", label: "Apps" },
+  { href: "/jaxlendar", label: "Jaxlendar" },
 ];
 
 export function Nav() {
@@ -69,7 +70,7 @@ export function Nav() {
               mediaseed
             </Link>
 
-            <nav className="hidden md:flex items-center gap-9">
+            <nav className="hidden md:flex items-center gap-5 lg:gap-8">
               {studioLinks.map((l) => (
                 <Link
                   key={l.href}
