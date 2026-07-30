@@ -322,7 +322,7 @@ function renderRoster(el) {
   scrHTML(el, `
     <div class="card">
       <h3>Roster · ${s.roster.length}/15 ${s.deadMoney ? `<span class="muted">· dead money ${fmtM(s.deadMoney)}</span>` : ""}</h3>
-      <table class="tbl">
+      <div class="tbl-wrap"><table class="tbl">
         <thead><tr><th></th><th>PLAYER</th><th>AGE</th><th>OVR</th><th>SALARY</th><th></th></tr></thead>
         <tbody>${sorted.map((p, i) => `
           ${i === 8 ? `<tr class="divider-row"><td colspan="6">— END OF ROTATION —</td></tr>` : ""}
@@ -334,7 +334,7 @@ function renderRoster(el) {
             <td>${fmtM(p.sal)}</td>
             <td><button class="mini danger arm" data-act="waive" data-name="${esc(p.name)}">WAIVE</button></td>
           </tr>`).join("")}</tbody>
-      </table>
+      </table></div>
       <p class="muted small">Top 8 make the rotation. Waiving is free but leaves 50% dead money on your cap. New arrivals pay a small chemistry tax in year one.</p>
     </div>
     <div class="card"><h3>Draft Capital</h3>
@@ -360,21 +360,21 @@ function renderDraft(el) {
       }).join("")}</div>
       <p class="muted small">The board shows what everyone knew on draft night — where they actually went. What they became… that's on you.
         Drafting is a free move, and you get <b>${E.scoutsLeft(s, y)} of ${E.SCOUTS_PER_DRAFT}</b> scouting trips: burn one to learn a prospect's true ceiling.</p>
-      <table class="tbl">
-        <thead><tr><th>REAL</th><th></th><th>PROSPECT</th><th>AGE</th><th>SCOUT'S NOTE</th><th></th><th></th></tr></thead>
+      <div class="tbl-wrap"><table class="tbl">
+        <thead><tr><th>REAL</th><th></th><th>PROSPECT</th><th class="col-age">AGE</th><th class="col-note">SCOUT'S NOTE</th><th></th><th></th></tr></thead>
         <tbody>${avail.map(d => {
           const tier = (s.scouted ?? {})[d.name];
           return `
           <tr>
             <td class="pos">#${d.realPick}</td><td class="pos">${d.pos}</td>
-            <td><span class="p-name">${ava(d.name)}<span>${esc(d.name)}</span></span></td><td>${d.age}</td>
-            <td class="muted small">${esc(d.note ?? "")}</td>
+            <td><span class="p-name">${ava(d.name)}<span>${esc(d.name)}</span></span></td><td class="col-age">${d.age}</td>
+            <td class="muted small col-note">${esc(d.note ?? "")}</td>
             <td>${tier ? `<span class="tier t-${tier.toLowerCase().replace("-", "")}">${tier}</span>`
               : `<button class="mini scout" data-act="scout" data-name="${esc(d.name)}" ${E.scoutsLeft(s, y) > 0 ? "" : "disabled"}>SCOUT</button>`}</td>
             <td><button class="mini arm" data-act="draft" data-idx="${pk.idx}" data-name="${esc(d.name)}">DRAFT</button></td>
           </tr>`;
         }).join("")}</tbody>
-      </table>
+      </table></div>
       <button class="ghost small" data-act="pass-pick" data-idx="${pk.idx}">Pass on pick #${slot}</button>
     </div>`);
 }
@@ -483,12 +483,12 @@ function renderSeason(scr) {
         <div class="sf-sub">TEAM RATING ${season.rating.toFixed(1)} · ${made ? `PLAYOFFS CLINCHED · TITLE ODDS ${odds}%` : "MISSED THE PLAYOFFS"}</div>
       </div>
       <div class="card"><h3>The Gauntlet — ${y + 1} Title Race</h3>
-        <table class="tbl standings"><thead><tr><th></th><th></th><th>TEAM</th><th>RECORD</th><th>PWR</th></tr></thead><tbody>
+        <div class="tbl-wrap"><table class="tbl standings"><thead><tr><th></th><th></th><th>TEAM</th><th>RECORD</th><th>PWR</th></tr></thead><tbody>
           ${[...g.map(t => ({ team: t.team, conf: t.conf, ovr: t.ovr, wins: E.projWins(t.ovr), you: false })),
              { team: `${p.team.id} — YOU`, conf: p.team.conf, ovr: Math.round(E.teamRating(s, y, { playoff: true })), wins: season.wins, you: true }]
             .sort((a, b) => b.wins - a.wins)
             .map((t, i) => `<tr class="${t.you ? "you" : ""}"><td class="pos">${i + 1}</td><td class="pos">${t.conf}</td><td><b>${esc(t.team)}</b></td><td class="mono-cell">${t.wins}–${82 - t.wins}</td><td>${ovrChip(t.ovr)}</td></tr>`).join("")}
-        </tbody></table>
+        </tbody></table></div>
       </div>
       <button class="primary big" data-act="${made ? "to-playoffs" : "skip-playoffs"}">${made ? "ENTER THE PLAYOFFS ▶" : seasonIndex() >= 4 ? "FACE THE MUSIC" : "TO NEXT OFFSEASON ▶"}</button>
     </div>`;

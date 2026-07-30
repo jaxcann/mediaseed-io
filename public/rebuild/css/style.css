@@ -522,3 +522,49 @@ button:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
   .offbar .primary { width: 100%; order: 9; }
   .landing::before { display: none; }
 }
+
+/* ================= mobile / iPhone polish ================= */
+button, .tab, .asset, .target-row { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.tbl-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.tbl-wrap .tbl { min-width: 100%; }
+
+/* iPhone safe areas: home-bar clearance for the fixed ticker and action bar */
+#ticker { height: calc(34px + env(safe-area-inset-bottom, 0px)); padding-bottom: env(safe-area-inset-bottom, 0px); }
+.offbar { bottom: calc(34px + env(safe-area-inset-bottom, 0px)); }
+#toast { bottom: calc(48px + env(safe-area-inset-bottom, 0px)); }
+
+@media (max-width: 540px) {
+  .col-note, .col-age { display: none; }           /* draft flavor collapses; the names ARE the game */
+  .tbl th, .tbl td { padding: 6px 5px; font-size: 13px; }
+  .tbl th { font-size: 10px; letter-spacing: 1.5px; }
+  .ava { --asz: 30px; }
+  .ava.lg { --asz: 38px; }
+  #screen { padding: 14px 10px 120px; }
+  .card { padding: 13px; border-radius: 12px; }
+  .hud-abbr { font-size: 19px; padding: 6px 8px; }
+  .hud-leds { gap: 7px; }
+  .led-num { font-size: 15px; min-width: 38px; padding: 2px 5px; }
+  .led label { font-size: 8.5px; letter-spacing: 1px; }
+  .hud-right .ghost { padding: 6px 8px; font-size: 11px; }
+  #hud { padding: 0 8px; }
+  .hud-phase-main { font-size: 14px; letter-spacing: 1px; }
+  .tabs { gap: 3px; }
+  .tab { padding: 8px 10px; font-size: 12px; letter-spacing: 1px; }
+  .fa-row { gap: 8px; }
+  .fa-ask { font-size: 11px; }
+  .fa-pull { font-size: 10.5px; padding: 3px 6px; }
+  .mini { padding: 7px 9px; font-size: 11px; }
+  .target-row { gap: 8px; padding: 10px; font-size: 13px; flex-wrap: wrap; }
+  .target-row .ask { margin-left: 0; width: 100%; text-align: right; margin-top: -4px; }
+  .offer-body { font-size: 12.5px; }
+  .sf-record { font-size: 46px; }
+  .po-series { padding: 11px 12px; gap: 6px; }
+  .share-grid { font-size: 27px; }
+  .end-banner h1 { font-size: 26px; letter-spacing: 4px; }
+  .rc-quip { display: none; }                       /* grades speak for themselves on small screens */
+  .rc-row { font-size: 12.5px; flex-wrap: wrap; }
+  .land-team { font-size: 30px; }
+  .landing { padding-top: 2vh; }
+  .countdown { font-size: 30px; }
+  .stat-row { gap: 16px; }
+}
