@@ -49,9 +49,11 @@ export function slotValue(slot) {
   return 25;
 }
 export function slotFromWins(w) { return Math.max(1, Math.min(30, Math.round((w - 10) * 0.55))); }
+const PICK_DEPRECIATION = [1, 0.89, 0.82, 0.71, 0.65]; // NBA 2K MyNBA default curve by years out
 export function pickValue(state, pick, y) {
   const slot = resolveSlot(state, pick);
-  return Math.round(slotValue(slot) * Math.pow(0.92, Math.max(0, pick.year - y)));
+  const out = Math.min(4, Math.max(0, pick.year - y));
+  return Math.round(slotValue(slot) * PICK_DEPRECIATION[out]);
 }
 export function resolveSlot(state, pick) {
   if (pick.slot === "OWN") return slotFromWins(state.lastWins);
@@ -139,18 +141,108 @@ export function targetAvailable(state, t) {
     !state.usedTargets.includes(t.name) &&
     !state.roster.some(p => p.name === t.name);
 }
+// ---------- front-office AI: CBA matching, team direction, GM temperament ----------
+// Era-accurate salary matching for over-cap teams (per Larry Coon's CBA FAQ / ESPN Trade Machine):
+//   1999 CBA (through 2004): 115% + $100k · 2005 CBA: 125% + $100k
+//   2011 CBA: max(min(1.5·out+.1, out+5), 1.25·out+.1) · 2017 CBA: same with 1.75 in the low band
+//   2023 CBA: max(min(2·out+.25, out+7.5), 1.25·out+.25)
+// Under-cap teams absorb into room; minimum-salary players always pass matching.
+export function cbaMaxIn(y, out) {
+  if (y < 2005) return out * 1.15 + 0.1;
+  if (y < 2011) return out * 1.25 + 0.1;
+  if (y < 2017) return Math.max(Math.min(out * 1.5 + 0.1, out + 5), out * 1.25 + 0.1);
+  if (y < 2023) return Math.max(Math.min(out * 1.75 + 0.1, out + 5), out * 1.25 + 0.1);
+  return Math.max(Math.min(out * 2 + 0.25, out + 7.5), out * 1.25 + 0.25);
+}
+export function cbaName(y) {
+  return y < 2005 ? "115% rule, '99 CBA" : y < 2011 ? "125% rule, '05 CBA"
+    : y < 2017 ? "'11 CBA bands" : y < 2023 ? "'17 CBA bands" : "'23 CBA bands";
+}
+const MIN_SALARY = 2.5; // approx vet-minimum: always passes matching (Minimum Player Salary TPE)
+export function salaryMatch(state, pack, outSal, inSal) {
+  const y = state.year;
+  if (payroll(state) - outSal + inSal <= pack.cap[y]) return { ok: true, how: "absorbed into cap room" };
+  if (inSal <= MIN_SALARY) return { ok: true, how: "minimum-salary exception" };
+  const maxIn = cbaMaxIn(y, outSal);
+  // smallest outgoing salary that would legalize this incoming number
+  let lo = 0, hi = 80;
+  for (let i = 0; i < 40; i++) { const mid = (lo + hi) / 2; if (cbaMaxIn(y, mid) < inSal) lo = mid; else hi = mid; }
+  return { ok: inSal <= maxIn, how: cbaName(y), maxIn, needOut: hi };
+}
+
+const TEMPERS = [["Ruthless", 1.08], ["Stubborn", 1.04], ["By-the-book", 1.0], ["Motivated", 0.96], ["Desperate", 0.92]];
+export function gmTemper(team) { return TEMPERS[hash32("gm|" + team) % TEMPERS.length]; }
+
+export const DIR_LABEL = {
+  rebuilding: "Rebuilding — wants youth & picks",
+  contending: "All-in — wants ready-now help",
+  retooling: "Retooling — open to anything",
+};
+// what an asset is worth IN THE OTHER GM'S EYES, given their team's direction
+export function perceivedPlayerValue(t, p, y) {
+  const dir = t.direction ?? "retooling";
+  let v = playerValue(p, y);
+  const age = ageOf(p, y), o = ovrAt(p, y);
+  if (dir === "rebuilding") {
+    if (p.sal >= 12 && age >= 30 && o < 80) return Math.round(v * 0.35);   // bad contract
+    if (age <= 25) v *= 1.2;
+    else if (age >= 31) v *= 0.65;
+  } else if (dir === "contending") {
+    if (o >= 80) v *= 1.15;
+    else if (age <= 23 && o < 75) v *= 0.75;
+  }
+  return Math.round(v);
+}
+export function perceivedPickValue(t, state, pk, y) {
+  const dir = t.direction ?? "retooling";
+  const mult = dir === "rebuilding" ? 1.25 : dir === "contending" ? 0.7 : 1.0;
+  return Math.round(pickValue(state, pk, y) * mult);
+}
+
 // assets: { players: [names], picks: [indices into state.picks] }
 export function evalTrade(state, pack, t, assets) {
   const y = state.year;
   const players = state.roster.filter(p => assets.players.includes(p.name));
   const picks = assets.picks.map(i => state.picks[i]).filter(Boolean);
-  const value = players.reduce((s, p) => s + playerValue(p, y), 0) +
+  const value = players.reduce((s, p) => s + perceivedPlayerValue(t, p, y), 0) +
+    picks.reduce((s, pk) => s + perceivedPickValue(t, state, pk, y), 0);
+  const rawValue = players.reduce((s, p) => s + playerValue(p, y), 0) +
     picks.reduce((s, pk) => s + pickValue(state, pk, y), 0);
   const outSal = players.reduce((s, p) => s + p.sal, 0);
   const room = capSpace(state, pack, y);
-  const salaryOk = (payroll(state) - outSal + t.sal) <= pack.cap[y] || outSal * 1.35 + 8 >= t.sal;
+  const match = salaryMatch(state, pack, outSal, t.sal);
+  const temper = gmTemper(t.team);
+  const cost = Math.round(t.cost * temper[1]);
   const rosterOk = state.roster.length - players.length + 1 <= 15;
-  return { value, cost: t.cost, outSal, salaryOk, rosterOk, room, ok: value >= t.cost && salaryOk && rosterOk };
+  // 2K-style star gate: an 86+ target demands a headline piece, not quantity-for-quality
+  const bestPiece = Math.max(0,
+    ...players.map(p => perceivedPlayerValue(t, p, y)),
+    ...picks.map(pk => perceivedPickValue(t, state, pk, y)));
+  const starGate = ovrAt(t, y) >= 86;
+  const centerOk = !starGate || bestPiece >= Math.round(cost * 0.33);
+  return { value, rawValue, cost, baseCost: t.cost, temper: temper[0], dir: t.direction ?? "retooling",
+    outSal, salaryOk: match.ok, match, rosterOk, room, starGate, centerOk, bestPiece,
+    centerNeed: Math.round(cost * 0.33),
+    ok: value >= cost && match.ok && rosterOk && centerOk };
+}
+
+// the other GM proposes the cheapest single addition that would close the deal
+export function counterOffer(state, pack, t, assets) {
+  const y = state.year;
+  const candidates = [
+    ...state.roster.filter(p => !assets.players.includes(p.name))
+      .map(p => ({ type: "player", key: p.name, label: p.name, pv: perceivedPlayerValue(t, p, y) })),
+    ...state.picks.map((pk, i) => ({ type: "pick", key: i, pv: perceivedPickValue(t, state, pk, y),
+      label: `the ${pk.year} 1st${pk.slot === "OWN" ? "" : ` (#${pk.slot})`}` }))
+      .filter(c => !assets.picks.includes(c.key)),
+  ].sort((a, b) => a.pv - b.pv);
+  for (const c of candidates) {
+    const trial = c.type === "player"
+      ? { players: [...assets.players, c.key], picks: assets.picks }
+      : { players: assets.players, picks: [...assets.picks, c.key] };
+    if (evalTrade(state, pack, t, trial).ok) return c;
+  }
+  return null;
 }
 export function executeTrade(state, pack, t, assets) {
   const ev = evalTrade(state, pack, t, assets);
@@ -185,6 +277,44 @@ export function signFA(state, pack, fa) {
   move(state, "sign", `Signed ${fa.name} ($${fa.ask}M)`,
     { kind: "sign", name: fa.name, ask: fa.ask, peak: peakOvr(fa.ovr), cap: pack.cap[state.year] });
   return { ok: true };
+}
+
+// ---------- shop a player (2K-style "find a trade") ----------
+function invSlotValue(v) {
+  for (let s = 1; s <= 60; s++) if (slotValue(s) <= v) return s;
+  return 60;
+}
+export function shopOffer(state, pack, name) {
+  if (state.phase !== "offseason") return null;
+  const p = state.roster.find(x => x.name === name);
+  if (!p) return null;
+  const pickYear = Math.min(pack.startYear + 3, state.year + 1);
+  if (pickYear < state.year + 1) return null;               // no draft left in the window
+  const val = playerValue(p, state.year);
+  if (val < 20) return null;                                 // nobody's calling about him
+  const seedBase = state.practice ? `practice|${state.packId}` : state.dateStr;
+  const u = roll(`${seedBase}|shop|${state.year}|${name}`);
+  const back = Math.round(val * (0.7 + 0.18 * u));           // sellers eat a 12–30% haircut
+  const pool = [...new Set([...(pack.tradeBlock ?? []).map(t => t.team), ...Object.values(pack.gauntlet).flat().map(g => g.team)])]
+    .filter(tm => tm !== pack.team.id);
+  const team = pool[hash32(`shopteam|${state.packId}|${state.year}|${name}`) % pool.length] ?? "???";
+  const picks = [];
+  const s1 = Math.max(8, invSlotValue(back));                // no top-7 picks from shopping
+  picks.push({ year: pickYear, slot: s1, via: team });
+  const rem = back - slotValue(s1);
+  if (rem >= 25 && pickYear + 1 <= pack.startYear + 3)
+    picks.push({ year: pickYear + 1, slot: Math.max(20, invSlotValue(rem)), via: team });
+  return { name, team, picks, back, val };
+}
+export function executeShop(state, pack, name) {
+  const o = shopOffer(state, pack, name);
+  if (!o) return { ok: false, error: "No market for him right now." };
+  const p = state.roster.find(x => x.name === name);
+  state.roster = state.roster.filter(x => x.name !== name);
+  for (const pk of o.picks) state.picks.push({ ...pk });
+  move(state, "trade", `Traded ${name} to ${o.team} for draft capital`,
+    { kind: "offer", gaveValue: o.val, gotValue: o.picks.reduce((s, pk) => s + slotValue(pk.slot), 0), peaks: [] });
+  return { ok: true, offer: o };
 }
 
 export function waive(state, name) {

@@ -332,10 +332,10 @@ function renderRoster(el) {
             <td>${E.ageOf(p, y)}</td>
             <td>${ovrChip(E.ovrAt(p, y))}</td>
             <td>${fmtM(p.sal)}</td>
-            <td><button class="mini danger arm" data-act="waive" data-name="${esc(p.name)}">WAIVE</button></td>
+            <td class="row-actions">${E.shopOffer(s, A.pack, p.name) ? `<button class="mini scout arm" data-act="shop" data-name="${esc(p.name)}" title="Trade him for draft capital">SHOP</button>` : ""}<button class="mini danger arm" data-act="waive" data-name="${esc(p.name)}">WAIVE</button></td>
           </tr>`).join("")}</tbody>
       </table></div>
-      <p class="muted small">Top 8 make the rotation. Waiving is free but leaves 50% dead money on your cap. New arrivals pay a small chemistry tax in year one.</p>
+      <p class="muted small">Top 8 make the rotation. SHOP a player to flip him to a rival for draft capital (1 move, sellers eat a haircut). Waiving is free but leaves 50% dead money. New arrivals pay a small chemistry tax in year one.</p>
     </div>
     <div class="card"><h3>Draft Capital</h3>
       ${s.picks.length ? `<ul class="wire">${s.picks.map(pk => `<li>${pk.year} 1st — ${pk.slot === "OWN" ? `own (projects #${E.slotFromWins(s.lastWins)})` : `#${pk.slot} via ${pk.via}`}</li>`).join("")}</ul>` : "<p class='muted'>No picks left. Bold.</p>"}
@@ -413,30 +413,39 @@ function renderPackageBuilder(t) {
   A.pkg = A.pkg ?? { players: [], picks: [] };
   const ev = E.evalTrade(s, p, t, A.pkg);
   const pct = Math.min(100, Math.round(ev.value / ev.cost * 100));
+  const counter = !ev.ok && ev.value >= ev.cost * 0.55 && ev.salaryOk !== undefined
+    ? E.counterOffer(s, p, t, A.pkg) : null;
   return `
     <div class="builder">
       <div class="builder-note">${esc(t.note ?? "")}</div>
+      <div class="intel">
+        <span class="intel-chip dir-${ev.dir}">${esc(E.DIR_LABEL[ev.dir])}</span>
+        <span class="intel-chip">${t.team} GM: ${ev.temper}${ev.cost !== ev.baseCost ? ` (${ev.cost > ev.baseCost ? "+" : ""}${Math.round((ev.cost / ev.baseCost - 1) * 100)}% ask)` : ""}</span>
+      </div>
       <button class="mini scout autopkg" data-act="pkg-auto" data-name="${esc(t.name)}">✦ AUTO-BUILD PACKAGE</button>
       <div class="builder-cols">
         <div><label>YOUR PLAYERS</label>
           ${s.roster.map(pl => `
             <button class="asset ${A.pkg.players.includes(pl.name) ? "sel" : ""}" data-act="pkg-player" data-name="${esc(pl.name)}">
-              <span class="p-name">${ava(pl.name, "sm")}${esc(pl.name)}</span> <span>${E.ovrAt(pl, y)} OVR · ${fmtM(pl.sal)} · ${E.playerValue(pl, y)} val</span>
+              <span class="p-name">${ava(pl.name, "sm")}${esc(pl.name)}</span> <span>${E.ovrAt(pl, y)} OVR · ${fmtM(pl.sal)} · worth ${E.perceivedPlayerValue(t, pl, y)} to them</span>
             </button>`).join("")}
         </div>
         <div><label>YOUR PICKS</label>
           ${s.picks.map((pk, i) => `
             <button class="asset ${A.pkg.picks.includes(i) ? "sel" : ""}" data-act="pkg-pick" data-idx="${i}">
-              ${pk.year} 1st ${pk.slot === "OWN" ? "(own)" : `#${pk.slot} ${pk.via}`} <span>${E.pickValue(s, pk, y)} val</span>
+              ${pk.year} 1st ${pk.slot === "OWN" ? "(own)" : `#${pk.slot} ${pk.via}`} <span>worth ${E.perceivedPickValue(t, s, pk, y)} to them</span>
             </button>`).join("") || "<p class='muted small'>None.</p>"}
         </div>
       </div>
       <div class="meter"><div class="meter-fill ${ev.value >= ev.cost ? "good" : ""}" style="width:${pct}%"></div><span>${ev.value} / ${ev.cost}</span></div>
       <div class="builder-foot">
-        ${!ev.salaryOk ? "<span class='bad'>✗ salaries don't match</span>" : "<span class='ok'>✓ salaries work</span>"}
+        ${!ev.salaryOk
+          ? `<span class='bad'>TRADE FAILED: taking back ${fmtM(Math.max(0.1, t.sal - ev.match.maxIn))} too much — send ~${fmtM(Math.max(0.1, ev.match.needOut - ev.outSal))} more out (${esc(ev.match.how)})</span>`
+          : `<span class='ok'>✓ salaries legal (${esc(ev.match.how)})</span>`}
         ${!ev.rosterOk ? "<span class='bad'>✗ roster full</span>" : ""}
+        ${ev.starGate && !ev.centerOk ? `<span class='bad'>✗ they want a headline piece (best asset ${ev.bestPiece}, need ${ev.centerNeed}+)</span>` : ""}
         ${ev.ok ? oddsGainChip(c => E.executeTrade(c, A.pack, t, A.pkg)) : ""}
-        ${!ev.ok && ev.salaryOk && ev.value >= ev.cost * 0.8 ? `<span class="nudge">“Close. Sweeten it a little.” — ${t.team} GM</span>` : ""}
+        ${counter ? `<button class="mini counter" data-act="take-counter" data-name="${esc(t.name)}" data-ctype="${counter.type}" data-ckey="${esc(String(counter.key))}">GM COUNTERS: “ADD ${esc(counter.label).toUpperCase()}”</button>` : ""}
         <button class="mini primary arm" data-act="do-trade" data-name="${esc(t.name)}" ${ev.ok ? "" : "disabled"}>PROPOSE · 1 MOVE</button>
       </div>
     </div>`;
@@ -670,7 +679,8 @@ function helpHTML() {
     <li>You're the GM at a real NBA crossroads. <b>Win a title within 4 seasons.</b></li>
     <li>Your score is <b>moves used</b> — trades and signings cost 1, drafting and waiving are free. Beat the par.</li>
     <li>You know the future. The game doesn't say it out loud. <i>Draft accordingly.</i></li>
-    <li>Stars only sign if your situation clears their <b>PULL</b>. Trades need value AND matching salaries.</li>
+    <li>Stars only sign if your situation clears their <b>PULL</b>. Trades follow real CBA salary matching — under the cap you can absorb, over it your outgoing salary must match.</li>
+    <li>Rival GMs value assets through their <b>team direction</b>: rebuilders pay extra for picks and kids, contenders for ready-now vets. Listen when a GM counters — and you can SHOP any player for draft capital.</li>
     <li>Each draft you get <b>2 scouting trips</b> — burn one to learn a prospect's true ceiling before you pick.</li>
     <li>Seasons simulate from your roster. Playoff series run game by game, best of seven — dice seeded by the date, same for everyone. Skill loads the dice.</li>
   </ol>
@@ -737,26 +747,42 @@ document.addEventListener("click", e => {
       A.pkg.players = A.pkg.players.includes(n) ? A.pkg.players.filter(x => x !== n) : [...A.pkg.players, n];
       return render();
     }
+    case "take-counter": {
+      if (btn.dataset.ctype === "player") A.pkg.players = [...A.pkg.players, btn.dataset.ckey];
+      else A.pkg.picks = [...A.pkg.picks, Number(btn.dataset.ckey)];
+      SFX.play("swish");
+      return render();
+    }
+    case "shop": {
+      const o = E.shopOffer(s, p, btn.dataset.name);
+      if (!o) return toast("No market for him right now.", true);
+      const r = E.executeShop(s, p, btn.dataset.name);
+      if (!r.ok) return toast(r.error, true);
+      store.save(); SFX.play("swish");
+      toast(`${o.team} sends ${o.picks.map(pk => `${pk.year} 1st (#${pk.slot})`).join(" + ")} for ${btn.dataset.name}.`);
+      return render();
+    }
     case "pkg-auto": {
       const t = p.tradeBlock.find(x => x.name === btn.dataset.name);
       const y = s.year;
       // protect the two best players; try fewest pieces first, then trim, then fix salary
       const protectNames = [...s.roster].sort((a, b) => E.ovrAt(b, y) - E.ovrAt(a, y)).slice(0, 2).map(x => x.name);
       const pool = [
-        ...s.roster.filter(pl => !protectNames.includes(pl.name)).map(pl => ({ type: "p", key: pl.name, val: E.playerValue(pl, y) })),
-        ...s.picks.map((pk, i) => ({ type: "k", key: i, val: E.pickValue(s, pk, y) }))
+        ...s.roster.filter(pl => !protectNames.includes(pl.name)).map(pl => ({ type: "p", key: pl.name, val: E.perceivedPlayerValue(t, pl, y) })),
+        ...s.picks.map((pk, i) => ({ type: "k", key: i, val: E.perceivedPickValue(t, s, pk, y) }))
       ].sort((a, b) => b.val - a.val);
+      const effCost = Math.round(t.cost * E.gmTemper(t.team)[1]);
       const pkg = { players: [], picks: [] };
       let val = 0;
       for (const a of pool) {
-        if (val >= t.cost) break;
+        if (val >= effCost) break;
         (a.type === "p" ? pkg.players : pkg.picks).push(a.key);
         val += a.val;
       }
       // trim any piece that isn't needed
       for (const a of [...pool].reverse()) {
         const inPkg = a.type === "p" ? pkg.players.includes(a.key) : pkg.picks.includes(a.key);
-        if (inPkg && val - a.val >= t.cost) {
+        if (inPkg && val - a.val >= effCost) {
           if (a.type === "p") pkg.players = pkg.players.filter(k => k !== a.key);
           else pkg.picks = pkg.picks.filter(k => k !== a.key);
           val -= a.val;
