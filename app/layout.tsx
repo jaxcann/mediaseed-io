@@ -75,6 +75,9 @@ export default function RootLayout({
         <ScrollProgress />
         <CursorFollower />
         {children}
+        {/* Vercel Web Analytics — activates once Analytics is enabled on the
+            project in the Vercel dashboard; harmless no-op until then. */}
+        <script defer src="/_vercel/insights/script.js" />
       </body>
     </html>
   );

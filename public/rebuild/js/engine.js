@@ -539,6 +539,6 @@ export function shareText(state, pack, gameNo) {
   const tail = state.won
     ? `${n} move${n === 1 ? "" : "s"} · ${golfLabel(n, pack.par)} (Par ${pack.par}) · Title in Year ${state.titleYear - pack.startYear + 1}`
     : `No banner · ${n} move${n === 1 ? "" : "s"} (Par ${pack.par})`;
-  return `${head}\n${grid}  ${tail}`;
+  return `${head}\n${grid}  ${tail}\nmediaseed.io/rebuild`;
 }
 export { RESULT_EMOJI };
