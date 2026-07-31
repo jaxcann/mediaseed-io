@@ -37,11 +37,11 @@ const apps: Omit<AppEntry, "index" | "total">[] = [
     tagline: "Your whole day, on one tape.",
     description:
       "Catch your day in tiny moments — photos, 3-second loops, and sticker cut-outs — that stitch into a tape you can play back, then turn into comics, carousels, PunchCards, Tapegrams, and Live Tapes worth sharing. Private by design: everything stays on the phone.",
-    status: "dev",
-    platform: "iOS · in active development",
-    meta: ["Targeting 2026", "Private by design", "Made in Georgia"],
-    href: "/daytapes",
-    cta: "Open the site",
+    status: "live",
+    platform: "iOS · App Store",
+    meta: ["Free + Pro", "Private by design", "Made in Georgia"],
+    href: "https://apps.apple.com/us/app/daytapes/id6771819144",
+    cta: "View in App Store",
   },
   {
     name: "Pocket Pods",
@@ -95,8 +95,8 @@ export default function AppsPage() {
               className="mt-8 sm:mt-10 text-base md:text-xl text-muted max-w-2xl leading-relaxed animate-fade-up"
               style={{ animationDelay: "120ms", animationFillMode: "both", opacity: 0 }}
             >
-              Small apps from the studio — built for intention over engagement.
-              One in the App Store, two in the soil.
+              Small apps from the network — built for intention over
+              engagement. Two in the App Store, more in the soil.
             </p>
 
             <div
@@ -113,7 +113,7 @@ export default function AppsPage() {
                 aria-hidden="true"
                 className="hidden sm:inline-block h-1 w-1 rounded-full bg-border-strong"
               />
-              <span>By Jaxon Cannon</span>
+              <span>Made by Mediaseed</span>
             </div>
           </div>
         </section>
@@ -142,7 +142,7 @@ export default function AppsPage() {
                   </p>
                 </div>
                 <a
-                  href="mailto:jax@mediaseed.io?subject=Notify%20me%20when%20new%20apps%20ship"
+                  href="mailto:hello@mediaseed.io?subject=Notify%20me%20when%20new%20apps%20ship"
                   className="group inline-flex items-center justify-center gap-2 rounded-full bg-fg text-bg px-6 py-4 sm:py-3.5 text-sm font-medium hover:bg-accent hover:text-fg transition-colors self-stretch md:self-start"
                 >
                   Get notified

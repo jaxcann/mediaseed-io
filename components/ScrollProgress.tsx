@@ -47,8 +47,12 @@ export function ScrollProgress() {
     >
       <div
         ref={barRef}
-        className="h-full origin-left bg-gradient-to-r from-accent via-accent-hover to-accent"
-        style={{ transform: "scaleX(0)" }}
+        className="h-full origin-left"
+        style={{
+          transform: "scaleX(0)",
+          background:
+            "linear-gradient(90deg, #E85DA8, #8B72EA 40%, #38B8D8 75%, #FF9A62)",
+        }}
       />
     </div>
   );

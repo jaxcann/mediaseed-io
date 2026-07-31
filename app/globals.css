@@ -159,6 +159,50 @@ p {
   color: #fafafa;
 }
 
+/* ── Mediaseed HQ (network homepage) ────────────────────────────────────── */
+
+/* Iridescent gradient text — the network wordmark treatment */
+.hq-grad-text {
+  background: linear-gradient(
+    94deg,
+    #e85da8 0%,
+    #8b72ea 32%,
+    #38b8d8 64%,
+    #ff9a62 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Marquee ticker */
+@keyframes hq-marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.hq-marquee-track {
+  animation: hq-marquee 36s linear infinite;
+  will-change: transform;
+}
+
+.hq-marquee:hover .hq-marquee-track {
+  animation-play-state: paused;
+}
+
+/* Selection inside the HQ homepage flips to pastel pink on ink */
+.hq-root ::selection {
+  background: #f6a8d8;
+  color: #141319;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hq-marquee-track {
+    animation: none;
+  }
+}
+
 /* DayTapes microsite — system-font stack overrides the studio's Geist, and
    selection switches to the orange brand color. Scoped via .daytapes-root */
 .daytapes-root {

@@ -7,37 +7,36 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://mediaseed.io"),
-  title: "Mediaseed — Jax Cannon · creative & developer",
+  title: "Mediaseed — a content network",
   description:
-    "The portfolio of Jax Cannon — video, social, web, and iOS apps, made in Georgia. Content that's crossed a million views, plus software shipped to the App Store.",
+    "The HQ of the Mediaseed network — YouTube channels, daily games, and iOS apps, all grown in-house and made in Georgia.",
   keywords: [
-    "Jax Cannon",
     "Mediaseed",
-    "portfolio",
-    "creative",
-    "video editor",
-    "content creator",
-    "social media",
-    "web developer",
-    "iOS developer",
+    "content network",
+    "YouTube channels",
+    "daily game",
+    "DAILY REBUILD",
+    "Surgepod",
+    "DayTapes",
+    "iOS apps",
     "Georgia",
   ],
-  authors: [{ name: "Jax Cannon" }],
-  creator: "Jax Cannon",
+  authors: [{ name: "Mediaseed" }],
+  creator: "Mediaseed",
   openGraph: {
     type: "website",
     locale: "en_US",
     url: "https://mediaseed.io",
     siteName: "Mediaseed",
-    title: "Mediaseed — Jax Cannon · creative & developer",
+    title: "Mediaseed — a content network",
     description:
-      "The portfolio of Jax Cannon — video, social, web, and iOS apps, made in Georgia. Content that's crossed a million views, plus software shipped to the App Store.",
+      "The HQ of the Mediaseed network — YouTube channels, daily games, and iOS apps, all grown in-house and made in Georgia.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Mediaseed — Jax Cannon",
+    title: "Mediaseed — a content network",
     description:
-      "Video, social, web, and iOS apps, made in Georgia. A portfolio of everything I make.",
+      "Channels, games, and apps — all grown in-house. This is the HQ.",
     creator: "@mediaseed",
   },
   robots: {

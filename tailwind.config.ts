@@ -18,6 +18,20 @@ const config: Config = {
         accent: "#4a6741",
         "accent-hover": "#5a7a51",
         "accent-deep": "#3d5a3d",
+        // Mediaseed HQ palette — yuruyurau-inspired iridescent pastels on cream.
+        // Scoped via `hq-` prefix; used by the network homepage.
+        "hq-cream": "#FAF6F0",
+        "hq-cream-soft": "#F3EDE4",
+        "hq-ink": "#141319",
+        "hq-ink-soft": "#3A3844",
+        "hq-pink": "#F6A8D8",
+        "hq-pink-deep": "#E85DA8",
+        "hq-lav": "#B9A8F5",
+        "hq-lav-deep": "#8B72EA",
+        "hq-cyan": "#7DD6E8",
+        "hq-cyan-deep": "#38B8D8",
+        "hq-peach": "#FFC29E",
+        "hq-peach-deep": "#FF9A62",
         // DayTapes brand palette — scoped via `daytapes-` prefix to avoid
         // colliding with the studio palette above
         "daytapes-accent": "#E8743C",

@@ -5,15 +5,15 @@ import { DotField } from "@/components/DotField";
 import { Jaxlendar } from "@/components/jaxlendar/Jaxlendar";
 
 export const metadata: Metadata = {
-  title: "Jaxlendar — a daily log of what I ship",
+  title: "Jaxlendar — the Mediaseed shipping log",
   description:
-    "A running calendar of everything Jax makes and ships out of the Mediaseed studio — one entry a day, media and all.",
+    "A running calendar of everything shipped out of the Mediaseed network — one entry a day, media and all.",
   openGraph: {
     type: "website",
     url: "https://mediaseed.io/jaxlendar",
-    title: "Jaxlendar — a daily log of what I ship",
+    title: "Jaxlendar — the Mediaseed shipping log",
     description:
-      "A running calendar of everything Jax makes and ships — one entry a day.",
+      "A running calendar of everything the Mediaseed network ships — one entry a day.",
   },
   alternates: { canonical: "/jaxlendar" },
 };
@@ -47,9 +47,9 @@ export default function JaxlendarPage() {
               className="mt-6 sm:mt-8 text-base md:text-xl text-muted max-w-2xl leading-relaxed animate-fade-up"
               style={{ animationDelay: "120ms", animationFillMode: "both", opacity: 0 }}
             >
-              A running calendar of everything I make and ship out of the
-              studio — one entry a day, media and all. Tap any lit-up day to see
-              what came out of it.
+              A running calendar of everything the network ships — one entry a
+              day, media and all. Tap any lit-up day to see what came out of
+              it.
             </p>
           </div>
         </section>

@@ -24,6 +24,9 @@ export function Footer() {
             <Link href="/jaxlendar" className="hover:text-fg transition-colors">
               Jaxlendar
             </Link>
+            <a href="/rebuild" className="hover:text-fg transition-colors">
+              Rebuild
+            </a>
             <a
               href="https://instagram.com/mediaseed"
               target="_blank"
@@ -33,7 +36,7 @@ export function Footer() {
               Instagram ↗
             </a>
             <a
-              href="mailto:jax@mediaseed.io"
+              href="mailto:hello@mediaseed.io"
               className="hover:text-fg transition-colors"
             >
               Email
@@ -42,8 +45,8 @@ export function Footer() {
         </div>
 
         <div className="mt-12 pt-8 border-t border-border flex flex-col md:flex-row md:items-center md:justify-between gap-3 font-mono text-[11px] tracking-[0.14em] uppercase text-muted-strong">
-          <p>© 2026 Jax Cannon · Mediaseed. Made in Georgia.</p>
-          <p>Always making something.</p>
+          <p>© 2026 Mediaseed. Made in Georgia.</p>
+          <p>Always growing.</p>
         </div>
       </div>
     </footer>
