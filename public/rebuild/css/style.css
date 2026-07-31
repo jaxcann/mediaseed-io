@@ -587,3 +587,54 @@ button, .tab, .asset, .target-row { touch-action: manipulation; -webkit-tap-high
   .intel-chip { font-size: 10px; padding: 4px 7px; }
   .row-actions { flex-direction: column; }
 }
+
+/* ================= trade deadline ================= */
+.dl-flash { border-top: 3px solid var(--red); }
+.dl-flash .sf-sub { color: var(--amber); }
+.dl-chip {
+  font-family: var(--cond); font-size: 10.5px; letter-spacing: 1.5px; white-space: nowrap;
+  color: var(--red); border: 1px solid rgba(255,82,82,0.5); background: rgba(255,82,82,0.1);
+  padding: 3px 8px; border-radius: 6px; animation: dlpulse 1.6s ease infinite;
+}
+@keyframes dlpulse { 50% { background: rgba(255,82,82,0.22); } }
+.deadline { max-width: 760px; margin: 0 auto; }
+.deadline .score-flash { margin-bottom: 14px; }
+.deadline .primary.big { margin-top: 4px; }
+
+/* ================= player cards ================= */
+.ava.clickable { cursor: pointer; transition: transform .12s, box-shadow .12s; }
+.ava.clickable:hover { transform: scale(1.12); box-shadow: 0 0 0 2px var(--amber), 0 4px 12px rgba(0,0,0,0.5); }
+.ava.xl { --asz: 84px; }
+.pcard .pc-head { display: flex; gap: 16px; align-items: center; margin-bottom: 14px; }
+.pcard h2 { margin-bottom: 2px; }
+.pc-badges { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+.pc-ovr { display: flex; align-items: center; gap: 12px; margin: 10px 0 6px; }
+.pc-ovr .ovr { font-size: 19px; min-width: 46px; padding: 6px 8px; }
+.spark { width: 180px; height: 46px; overflow: visible; }
+.pcard .stat-row { margin-top: 14px; }
+
+/* ================= rafters ================= */
+.rafters { text-align: center; }
+.raft-label { font-family: var(--cond); font-size: 11px; letter-spacing: 3px; color: var(--mut); margin-bottom: 10px; }
+.raft-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.banner-flag {
+  display: flex; flex-direction: column; align-items: center; gap: 1px;
+  width: 74px; padding: 10px 6px 16px;
+  background: linear-gradient(175deg, var(--c1), color-mix(in srgb, var(--c1) 55%, #000));
+  border-top: 3px solid var(--c2);
+  clip-path: polygon(0 0, 100% 0, 100% 78%, 50% 100%, 0 78%);
+  color: #fff; transition: transform .15s;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+}
+.banner-flag:hover { transform: translateY(-3px); }
+.banner-flag b { font-family: var(--cond); font-size: 17px; letter-spacing: 1px; }
+.banner-flag span { font-family: var(--cond); font-size: 10px; letter-spacing: 2px; opacity: 0.85; }
+.banner-flag i { font-style: normal; font-family: var(--mono); font-size: 8.5px; margin-top: 3px; opacity: 0.9; }
+
+/* streak */
+.streak { font-family: var(--cond); letter-spacing: 2px; font-size: 14px; color: var(--amber); }
+
+@media (max-width: 540px) {
+  .dl-chip { display: none; }
+  .banner-flag { width: 62px; }
+}

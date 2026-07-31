@@ -4,10 +4,10 @@ import HEADS from "../data/headshots.js";
 
 // ---------- player avatars ----------
 const headURL = id => `https://cdn.nba.com/headshots/nba/latest/260x190/${id}.png`;
-function ava(name, cls = "") {
+function ava(name, cls = "", card = true) {
   const id = HEADS[name];
   const init = name.split(" ").filter(Boolean).map(w => w[0]).slice(0, 2).join("").toUpperCase();
-  return `<span class="ava ${cls}"><i>${esc(init)}</i>${id ? `<img loading="lazy" decoding="async" src="${headURL(id)}" alt="" onerror="this.remove()">` : ""}</span>`;
+  return `<span class="ava ${cls}${card ? " clickable" : ""}"${card ? ` data-card="${esc(name)}"` : ""}><i>${esc(init)}</i>${id ? `<img loading="lazy" decoding="async" src="${headURL(id)}" alt="" onerror="this.remove()">` : ""}</span>`;
 }
 
 // ---------- sound (tiny WebAudio synth, no assets) ----------
@@ -147,7 +147,7 @@ function renderHUD() {
     return;
   }
   const s = A.state, p = A.pack;
-  const phaseTxt = { offseason: "OFFSEASON", season: "REGULAR SEASON", playoffs: "PLAYOFFS", victory: "CHAMPIONS", defeat: "GAME OVER" }[s.phase];
+  const phaseTxt = { offseason: "OFFSEASON", deadline: "TRADE DEADLINE", season: "REGULAR SEASON", playoffs: "PLAYOFFS", victory: "CHAMPIONS", defeat: "GAME OVER" }[s.phase];
   const cap = E.capSpace(s, p, Math.min(s.year, p.startYear + 3));
   hud.innerHTML = `
     <div class="hud-team" style="--c1:${p.team.colors[0]};--c2:${p.team.colors[1]}">
@@ -196,6 +196,7 @@ function render() {
   if (A.screen === "archive") return renderArchive(scr);
   const s = A.state;
   if (s.phase === "offseason") return renderOffseason(scr);
+  if (s.phase === "deadline") return renderDeadline(scr);
   if (s.phase === "season") return renderSeason(scr);
   if (s.phase === "playoffs") return renderPlayoffs(scr);
   if (s.phase === "victory" || s.phase === "defeat") return renderEnd(scr);
@@ -217,12 +218,25 @@ function renderLanding(scr) {
         <button class="primary big" data-act="play-daily">${done ? "VIEW RESULT" : existing ? "RESUME REBUILD" : "TAKE THE JOB"}</button>
         ${done ? `<div class="land-result">${existing.seasons.map(x => E.RESULT_EMOJI[x.playoffResult] ?? "⬛").join("")} · ${existing.moves.length} move${existing.moves.length === 1 ? "" : "s"} · ${existing.won ? E.golfLabel(existing.moves.length, pack.par) : "No banner"}</div>` : ""}
       </div>
+      ${(() => { const st = store.stats(); return st.streak > 0 ? `<div class="streak">🔥 ${st.streak}-day streak</div>` : ""; })()}
+      ${raftersHTML()}
       <div class="land-links">
         <button class="ghost" data-act="help">How to play</button>
         <button class="ghost" data-act="stats">Stats</button>
         <button class="ghost" data-act="archive">Practice archive</button>
       </div>
     </div>`;
+}
+
+function raftersHTML() {
+  const rows = PACKS.map(p => ({ p, b: bestFor(p.id) })).filter(x => x.b);
+  if (!rows.length) return "";
+  return `<div class="rafters"><div class="raft-label">YOUR RAFTERS</div><div class="raft-row">
+    ${rows.map(({ p, b }) => `
+      <button class="banner-flag" data-act="play-practice" data-id="${p.id}" style="--c1:${p.team.colors[0]};--c2:${p.team.colors[1]}" title="Replay this scenario">
+        <b>${p.startYear}</b><span>${p.team.id}</span><i>${b.moves} MOVE${b.moves === 1 ? "" : "S"}</i>
+      </button>`).join("")}
+  </div></div>`;
 }
 
 function renderArchive(scr) {
@@ -367,7 +381,7 @@ function renderDraft(el) {
           return `
           <tr>
             <td class="pos">#${d.realPick}</td><td class="pos">${d.pos}</td>
-            <td><span class="p-name">${ava(d.name)}<span>${esc(d.name)}</span></span></td><td class="col-age">${d.age}</td>
+            <td><span class="p-name">${ava(d.name, "", false)}<span>${esc(d.name)}</span></span></td><td class="col-age">${d.age}</td>
             <td class="muted small col-note">${esc(d.note ?? "")}</td>
             <td>${tier ? `<span class="tier t-${tier.toLowerCase().replace("-", "")}">${tier}</span>`
               : `<button class="mini scout" data-act="scout" data-name="${esc(d.name)}" ${E.scoutsLeft(s, y) > 0 ? "" : "disabled"}>SCOUT</button>`}</td>
@@ -474,6 +488,45 @@ function renderFA(el) {
         </div>`;
       }).join("") || "<p class='muted'>The market is bare.</p>"}
     </div>`);
+}
+
+// ----- trade deadline -----
+function renderDeadline(scr) {
+  const s = A.state, p = A.pack, y = s.year;
+  const season = s.seasons[s.seasons.length - 1];
+  const m = E.deadlineMarket(s, p);
+  const odds = Math.round(E.titleOdds(s, p) * 100);
+  const half = season.halfWins ?? 20;
+  const targetRow = (t, seller) => `
+    <div class="target ${A.trade === t.name ? "open" : ""}">
+      <button class="target-row" data-act="sel-target" data-name="${esc(t.name)}">
+        <span class="pos">${t.pos}</span>${ava(t.name)}<b>${esc(t.name)}</b><span class="muted">${t.team} · age ${E.ageOf({ age: t.age, year0: t.from ?? p.startYear }, y)}</span>
+        ${ovrChip(E.ovrAt(t, y))}<span class="muted">${fmtM(t.sal)}</span>
+        ${seller ? `<span class="dl-chip">FIRE SALE −15%</span>` : ""}<span class="ask">ASK ${Math.round(t.cost * E.gmTemper(t.team)[1] * (seller ? 0.85 : 1))}</span>
+      </button>
+      ${A.trade === t.name ? renderPackageBuilder(t) : ""}
+    </div>`;
+  scr.innerHTML = `
+    <div class="deadline">
+      <div class="score-flash dl-flash">
+        <div class="sf-label">${yearLabel(y)} · AT THE ALL-STAR BREAK</div>
+        <div class="sf-record">${half}<span>–</span>${41 - half}</div>
+        <div class="sf-sub">⏰ THE TRADE DEADLINE IS OPEN · TITLE ODDS ${odds}%</div>
+      </div>
+      ${m.sellers.length ? `<div class="card"><h3>Fire Sale — Rebuilders Cutting Bait</h3>
+        ${m.sellers.map(t => targetRow(t, true)).join("")}
+        <p class="muted small">Out-of-the-race teams move vets for 85 cents on the dollar. Midseason additions gel slower — the chemistry tax bites harder in February.</p></div>` : ""}
+      ${m.others.length ? `<div class="card"><h3>Deadline Market</h3>${m.others.map(t => targetRow(t, false)).join("")}</div>` : ""}
+      ${m.wanted.length ? `<div class="card"><h3>Contenders Are Calling</h3>
+        ${m.wanted.map(({ player, offer }) => `
+          <div class="fa-row">
+            <span class="pos">${player.pos}</span>${ava(player.name)}
+            <div class="fa-name"><b>${esc(player.name)}</b><span class="muted small">${offer.team} offers ${offer.picks.map(pk => `${pk.year} 1st (#${pk.slot})`).join(" + ")} — buyers pay a premium today</span></div>
+            ${ovrChip(E.ovrAt(player, y))}
+            <button class="mini scout arm" data-act="shop" data-name="${esc(player.name)}">SELL HIGH · 1 MOVE</button>
+          </div>`).join("")}</div>` : ""}
+      <button class="primary big" data-act="close-deadline">PLAY THE SECOND HALF ▶</button>
+    </div>`;
 }
 
 // ----- season -----
@@ -669,6 +722,63 @@ function renderEnd(scr) {
 
 function scrHTML(el, html) { el.innerHTML = html; }
 
+// ---------- player card (tap any headshot) ----------
+function findPerson(name) {
+  const s = A.state, p = A.pack;
+  const r = s.roster.find(x => x.name === name);
+  if (r) return { ...r, kind: r.midseason ? "DEADLINE ADD" : r.acquiredYear === s.year && s.year > p.startYear ? "NEW ARRIVAL" : "ON ROSTER", sal: r.sal };
+  const t = (p.tradeBlock ?? []).find(x => x.name === name);
+  if (t) return { ...t, year0: t.from ?? p.startYear, kind: `TRADE TARGET · ${t.team}` };
+  for (const [yr, fas] of Object.entries(p.freeAgents ?? {})) {
+    const f = fas.find(x => x.name === name);
+    if (f) return { ...f, year0: Number(yr), sal: f.ask, kind: "FREE AGENT" };
+  }
+  for (const o of p.offers ?? [])
+    for (const pl of o.get?.players ?? [])
+      if (pl.name === name) return { ...pl, year0: o.year, kind: `VIA ${o.team}` };
+  return null;
+}
+function sparkSVG(pts) {
+  if (pts.length < 2) return "";
+  const min = Math.min(...pts) - 2, max = Math.max(...pts) + 2;
+  const W = 180, H = 46;
+  const xy = pts.map((v, i) => `${(i / (pts.length - 1)) * W},${H - ((v - min) / (max - min)) * H}`);
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+    <polyline points="${xy.join(" ")}" fill="none" stroke="var(--amber)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="${xy[xy.length - 1].split(",")[0]}" cy="${xy[xy.length - 1].split(",")[1]}" r="3.5" fill="var(--amber)"/>
+  </svg>`;
+}
+function playerCardHTML(name) {
+  const s = A.state, y = s.year;
+  const p = findPerson(name);
+  if (!p) return `<h2>${esc(name)}</h2><p class="muted">No file on this player.</p>`;
+  const years = Object.keys(p.ovr).map(Number).filter(v => v <= y).sort((a, b) => a - b);
+  const pts = years.map(v => p.ovr[v]);
+  const cur = E.ovrAt(p, y);
+  const trend = pts.length >= 2 ? cur - pts[pts.length - 2] : 0;
+  return `
+    <div class="pcard">
+      <div class="pc-head">${ava(name, "xl", false)}
+        <div><h2>${esc(name)}</h2>
+        <div class="muted">${p.pos} · age ${E.ageOf(p, y)} · ${fmtM(p.sal ?? 0)}${p.ask ? "/yr ask" : ""}</div>
+        <div class="pc-badges">
+          <span class="pill">${esc(p.kind ?? "")}</span>
+          ${p.draftSlot != null ? `<span class="pill diff-hard">#${p.draftSlot} PICK '${String(p.draftYear).slice(2)}</span>` : ""}
+        </div></div>
+      </div>
+      <div class="pc-ovr">
+        ${ovrChip(cur)}
+        ${trend ? `<span class="delta ${trend > 0 ? "up" : "down"}">${trend > 0 ? "▲" : "▼"} ${Math.abs(trend)}</span>` : ""}
+        ${sparkSVG(pts)}
+      </div>
+      <p class="muted small">Career arc through ${yearLabel(y)}. Where it goes next is the game.</p>
+      <div class="stat-row">
+        <div><b>${E.playerValue({ ...p, year0: p.year0 ?? y }, y)}</b><label>trade value</label></div>
+        <div><b>${E.ageOf(p, y) <= 25 ? "YOUTH" : E.ageOf(p, y) >= 31 ? "VET" : "PRIME"}</b><label>timeline</label></div>
+      </div>
+    </div>`;
+}
+
 // ---------- modals ----------
 function showModal(html) {
   $("#modal").innerHTML = `<div class="modal-back" data-act="close-modal"><div class="modal-box" onclick="event.stopPropagation()">${html}<button class="ghost close" data-act="close-modal">Close</button></div></div>`;
@@ -682,6 +792,7 @@ function helpHTML() {
     <li>Stars only sign if your situation clears their <b>PULL</b>. Trades follow real CBA salary matching — under the cap you can absorb, over it your outgoing salary must match.</li>
     <li>Rival GMs value assets through their <b>team direction</b>: rebuilders pay extra for picks and kids, contenders for ready-now vets. Listen when a GM counters — and you can SHOP any player for draft capital.</li>
     <li>Each draft you get <b>2 scouting trips</b> — burn one to learn a prospect's true ceiling before you pick.</li>
+    <li>Every season pauses at the <b>trade deadline</b>: rebuilders run fire sales (−15%), contenders overpay for your vets — but February additions gel slower.</li>
     <li>Seasons simulate from your roster. Playoff series run game by game, best of seven — dice seeded by the date, same for everyone. Skill loads the dice.</li>
   </ol>
   <p class="legend">🟥 missed playoffs&ensp;🟨 early exit&ensp;🟧 conf finals&ensp;🥈 lost the Finals&ensp;🏆 banner</p>`;
@@ -708,6 +819,8 @@ function toast(msg, bad = false) {
 }
 
 document.addEventListener("click", e => {
+  const card = e.target.closest(".ava[data-card]");
+  if (card && A.state) { e.stopPropagation(); SFX.play("tick"); return showModal(playerCardHTML(card.dataset.card)); }
   const btn = e.target.closest("[data-act], [data-tab]");
   if (!btn) return;
   const act = btn.dataset.act;
@@ -850,6 +963,11 @@ document.addEventListener("click", e => {
     case "pass-pick": {
       E.passPick(s, Number(btn.dataset.idx));
       A.draftPick = null; store.save(); return render();
+    }
+    case "close-deadline": {
+      const r = E.closeDeadline(s);
+      if (r.ok) { store.save(); A.trade = null; A.pkg = null; }
+      return render();
     }
     case "start-season": {
       const r = E.startSeason(s);

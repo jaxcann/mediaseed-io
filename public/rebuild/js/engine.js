@@ -69,8 +69,12 @@ export function teamRating(state, y, { playoff = false } = {}) {
   let wsum = 0;
   for (let i = 0; i < 8; i++) wsum += W8[i] * (rot[i] ? ovrAt(rot[i], y) : REPLACEMENT);
   let rating = (wsum / W8SUM) * 1.35 - 20;
-  const newcomers = rot.filter(p => p.acquiredYear === y && y > state.startYear).length;
-  rating -= Math.min(3.5, newcomers * 0.7);
+  for (const p of rot) {
+    if (p.acquiredYear !== y) continue;
+    if (p.midseason) rating -= 1.2;
+    else if (y > state.startYear) rating -= 0.7;
+  }
+  rating = Math.max(rating, (wsum / W8SUM) * 1.35 - 24); // chemistry tax floor
   if (playoff) {
     const best = rot[0] ? ovrAt(rot[0], y) : REPLACEMENT;
     rating += best >= 93 ? 2 : best >= 90 ? 1 : best <= 85 ? -2 : 0;
@@ -136,7 +140,7 @@ export function acceptOffer(state, pack, o) {
 }
 
 export function targetAvailable(state, t) {
-  return state.phase === "offseason" &&
+  return (state.phase === "offseason" || state.phase === "deadline") &&
     state.year >= (t.from ?? state.year) && state.year <= (t.until ?? 9999) &&
     !state.usedTargets.includes(t.name) &&
     !state.roster.some(p => p.name === t.name);
@@ -212,7 +216,8 @@ export function evalTrade(state, pack, t, assets) {
   const room = capSpace(state, pack, y);
   const match = salaryMatch(state, pack, outSal, t.sal);
   const temper = gmTemper(t.team);
-  const cost = Math.round(t.cost * temper[1]);
+  const sellerDiscount = state.phase === "deadline" && (t.direction ?? "retooling") === "rebuilding";
+  const cost = Math.round(t.cost * temper[1] * (sellerDiscount ? 0.85 : 1));
   const rosterOk = state.roster.length - players.length + 1 <= 15;
   // 2K-style star gate: an 86+ target demands a headline piece, not quantity-for-quality
   const bestPiece = Math.max(0,
@@ -220,7 +225,7 @@ export function evalTrade(state, pack, t, assets) {
     ...picks.map(pk => perceivedPickValue(t, state, pk, y)));
   const starGate = ovrAt(t, y) >= 86;
   const centerOk = !starGate || bestPiece >= Math.round(cost * 0.33);
-  return { value, rawValue, cost, baseCost: t.cost, temper: temper[0], dir: t.direction ?? "retooling",
+  return { value, rawValue, cost, baseCost: t.cost, temper: temper[0], dir: t.direction ?? "retooling", sellerDiscount,
     outSal, salaryOk: match.ok, match, rosterOk, room, starGate, centerOk, bestPiece,
     centerNeed: Math.round(cost * 0.33),
     ok: value >= cost && match.ok && rosterOk && centerOk };
@@ -250,7 +255,7 @@ export function executeTrade(state, pack, t, assets) {
   state.roster = state.roster.filter(p => !assets.players.includes(p.name));
   const keep = new Set(assets.picks);
   state.picks = state.picks.filter((_, i) => !keep.has(i));
-  state.roster.push({ name: t.name, pos: t.pos, age: t.age, sal: t.sal, ovr: t.ovr, year0: t.from ?? state.year, acquiredYear: state.year });
+  state.roster.push({ name: t.name, pos: t.pos, age: t.age, sal: t.sal, ovr: t.ovr, year0: t.from ?? state.year, acquiredYear: state.year, midseason: state.phase === "deadline" || undefined });
   state.usedTargets.push(t.name);
   move(state, "trade", `Acquired ${t.name} from ${t.team}`,
     { kind: "trade", name: t.name, peak: peakOvr(t.ovr), cost: t.cost, paid: ev.value });
@@ -285,7 +290,7 @@ function invSlotValue(v) {
   return 60;
 }
 export function shopOffer(state, pack, name) {
-  if (state.phase !== "offseason") return null;
+  if (state.phase !== "offseason" && state.phase !== "deadline") return null;
   const p = state.roster.find(x => x.name === name);
   if (!p) return null;
   const pickYear = Math.min(pack.startYear + 3, state.year + 1);
@@ -294,7 +299,8 @@ export function shopOffer(state, pack, name) {
   if (val < 20) return null;                                 // nobody's calling about him
   const seedBase = state.practice ? `practice|${state.packId}` : state.dateStr;
   const u = roll(`${seedBase}|shop|${state.year}|${name}`);
-  const back = Math.round(val * (0.7 + 0.18 * u));           // sellers eat a 12–30% haircut
+  const deadline = state.phase === "deadline";
+  const back = Math.round(val * (deadline ? 0.85 + 0.13 * u : 0.7 + 0.18 * u)); // deadline buyers pay up
   const pool = [...new Set([...(pack.tradeBlock ?? []).map(t => t.team), ...Object.values(pack.gauntlet).flat().map(g => g.team)])]
     .filter(tm => tm !== pack.team.id);
   const team = pool[hash32(`shopteam|${state.packId}|${state.year}|${name}`) % pool.length] ?? "???";
@@ -380,11 +386,41 @@ export function startSeason(state) {
   if (state.phase !== "offseason") return { ok: false };
   const y = state.year;
   const rating = teamRating(state, y);
-  const wins = projWins(rating);
-  state.seasons.push({ year: y, rating, wins, playoffResult: null });
-  state.lastWins = wins;
+  const seedBase = state.practice ? `practice|${state.packId}` : state.dateStr;
+  const jitter = Math.round(roll(`${seedBase}|${state.packId}|half|${y}`) * 4 - 2);
+  const halfWins = Math.max(4, Math.min(37, Math.round(projWins(rating) / 2 + jitter)));
+  state.seasons.push({ year: y, rating, halfWins, wins: null, playoffResult: null });
+  state.phase = "deadline";
+  return { ok: true, rating, halfWins };
+}
+// close the trade-deadline window: second half plays out with the (possibly reshaped) roster
+export function closeDeadline(state) {
+  if (state.phase !== "deadline") return { ok: false };
+  const y = state.year;
+  const season = state.seasons[state.seasons.length - 1];
+  const rating2 = teamRating(state, y);
+  const seedBase = state.practice ? `practice|${state.packId}` : state.dateStr;
+  const jitter = Math.round(roll(`${seedBase}|${state.packId}|half2|${y}`) * 4 - 2);
+  const secondHalf = Math.max(4, Math.min(41, Math.round(projWins(rating2) / 2 + jitter)));
+  season.wins = Math.max(11, Math.min(72, season.halfWins + secondHalf));
+  season.rating = rating2;
+  state.lastWins = season.wins;
   state.phase = "season";
-  return { ok: true, rating, wins };
+  return { ok: true, wins: season.wins, secondHalf };
+}
+// deadline-day market: rebuilding sellers discount their vets; contenders call about yours
+export function deadlineMarket(state, pack) {
+  const y = state.year;
+  const sellers = (pack.tradeBlock ?? []).filter(t => targetAvailable(state, t) && (t.direction ?? "retooling") === "rebuilding");
+  const others = (pack.tradeBlock ?? []).filter(t => targetAvailable(state, t) && (t.direction ?? "retooling") !== "rebuilding");
+  const best = rotation(state, y)[0]?.name;
+  const wanted = [...state.roster]
+    .filter(p => p.name !== best && ageOf(p, y) >= 28 && ovrAt(p, y) >= 74)
+    .sort((a, b) => ovrAt(b, y) - ovrAt(a, y))
+    .slice(0, 3)
+    .map(p => ({ player: p, offer: shopOffer(state, pack, p.name) }))
+    .filter(x => x.offer);
+  return { sellers, others, wanted };
 }
 
 export function playoffPath(state, pack) {
