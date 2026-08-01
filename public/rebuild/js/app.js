@@ -694,7 +694,7 @@ function renderEnd(scr) {
       <div class="card share-card">
         <div class="share-grid">${grid}</div>
         <pre class="share-pre">${esc(E.shareText(s, p, gameNumber()))}</pre>
-        <button class="primary" data-act="share">${navigator.share && matchMedia("(pointer: coarse)").matches ? "SHARE RESULT" : "COPY RESULT"}</button>
+        <button class="primary" data-act="share">COPY RESULT</button>
         <span class="copied" id="copied">Copied ✓</span>
       </div>
       ${reportCardHTML(s)}
@@ -994,16 +994,8 @@ document.addEventListener("click", e => {
     }
     case "share": {
       const txt = E.shareText(s, p, gameNumber());
-      const copy = () =>
-        navigator.clipboard?.writeText(txt).then(() => $("#copied")?.classList.add("show"))
-          .catch(() => toast("Copy failed — select the text manually", true));
-      // Touch devices get the native share sheet (straight into the group
-      // chat); desktop copies to clipboard. Share-cancel falls back to copy.
-      if (navigator.share && matchMedia("(pointer: coarse)").matches) {
-        navigator.share({ text: txt }).catch(err => {
-          if (err?.name !== "AbortError") copy();
-        });
-      } else copy();
+      navigator.clipboard?.writeText(txt).then(() => $("#copied")?.classList.add("show"))
+        .catch(() => toast("Copy failed — select the text manually", true));
       return;
     }
   }
