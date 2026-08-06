@@ -197,6 +197,37 @@ p {
   color: #141319;
 }
 
+/* Latest Drops — bubbles bob gently, out of phase via animation-delay */
+@keyframes hq-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}
+
+.hq-bubble {
+  animation: hq-float 7s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* Hide the scrollbar on the drops strip without killing scrollability */
+.hq-drops-scroll {
+  scrollbar-width: none;
+}
+
+.hq-drops-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hq-bubble {
+    animation: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .hq-marquee-track {
     animation: none;

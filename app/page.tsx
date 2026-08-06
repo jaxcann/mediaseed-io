@@ -12,6 +12,8 @@ import {
 import { HqNav } from "@/components/hq/HqNav";
 import { Particles } from "@/components/hq/Particles";
 import { Marquee } from "@/components/hq/Marquee";
+import { LatestDrops } from "@/components/hq/LatestDrops";
+import { channels } from "@/components/hq/channels";
 import { Reveal } from "@/components/Reveal";
 
 export const viewport: Viewport = {
@@ -21,41 +23,6 @@ export const viewport: Viewport = {
   maximumScale: 5,
   viewportFit: "cover",
 };
-
-// NOTE: channel handles are verbatim from the boss — if any handle differs on
-// YouTube, fix the `handle` here and the URL follows.
-const channels = [
-  {
-    name: "inmognito",
-    handle: "inmognito",
-    from: "#B9A8F5",
-    to: "#7C6BE8",
-  },
-  {
-    name: "mostremote",
-    handle: "mostremote",
-    from: "#7DD6E8",
-    to: "#38A8C9",
-  },
-  {
-    name: "OTP Daily Doodles",
-    handle: "OTPDailyDoodles",
-    from: "#FFC29E",
-    to: "#F085C0",
-  },
-  {
-    name: "Cinderella Sports",
-    handle: "CinderellaSports",
-    from: "#A8C6F6",
-    to: "#8B72EA",
-  },
-  {
-    name: "lightswitched",
-    handle: "lightswitched",
-    from: "#FFE0A0",
-    to: "#FF9A62",
-  },
-];
 
 const apps = [
   {
@@ -234,6 +201,9 @@ export default function Page() {
             </div>
           </div>
         </section>
+
+        {/* ── LATEST DROPS ─────────────────────────────────────────────── */}
+        <LatestDrops />
 
         {/* ── GAMES ────────────────────────────────────────────────────── */}
         <section id="games" className="py-16 sm:py-20 md:py-28 px-5 sm:px-6 md:px-10 scroll-mt-20">
