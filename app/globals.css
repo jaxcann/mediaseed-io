@@ -204,7 +204,7 @@ p {
     transform: translateY(0);
   }
   50% {
-    transform: translateY(-14px);
+    transform: translateY(-9px);
   }
 }
 

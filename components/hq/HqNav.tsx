@@ -6,9 +6,9 @@ import { Menu, X } from "lucide-react";
 
 const links = [
   { href: "#channels", label: "Channels" },
+  { href: "#drops", label: "Drops" },
   { href: "#games", label: "Games" },
   { href: "#apps", label: "Apps" },
-  { href: "/jaxlendar", label: "Jaxlendar" },
 ];
 
 export function HqNav() {

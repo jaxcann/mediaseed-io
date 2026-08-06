@@ -7,7 +7,6 @@ import {
   Gamepad2,
   Download,
   Youtube,
-  CalendarDays,
 } from "lucide-react";
 import { HqNav } from "@/components/hq/HqNav";
 import { Particles } from "@/components/hq/Particles";
@@ -318,35 +317,6 @@ export default function Page() {
           </div>
         </section>
 
-        {/* ── JAXLENDAR STRIP ──────────────────────────────────────────── */}
-        <section className="py-4 px-5 sm:px-6 md:px-10">
-          <div className="mx-auto max-w-content">
-            <Reveal>
-              <Link
-                href="/jaxlendar"
-                className="group flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border-2 border-dashed border-hq-ink/15 px-6 py-6 sm:px-8 transition-colors hover:border-hq-ink/40"
-              >
-                <div className="flex items-center gap-4">
-                  <CalendarDays size={20} className="text-hq-cyan-deep shrink-0" />
-                  <div>
-                    <span className="font-semibold tracking-tight">
-                      The Jaxlendar
-                    </span>
-                    <span className="text-hq-ink-soft">
-                      {" "}
-                      — the public shipping log. One entry a day, every day.
-                    </span>
-                  </div>
-                </div>
-                <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-hq-ink group-hover:text-hq-pink-deep transition-colors shrink-0">
-                  Open
-                  <ArrowRight size={14} />
-                </span>
-              </Link>
-            </Reveal>
-          </div>
-        </section>
-
         {/* ── CONTACT ──────────────────────────────────────────────────── */}
         <section id="contact" className="py-20 sm:py-24 md:py-32 px-5 sm:px-6 md:px-10 scroll-mt-20">
           <div className="mx-auto max-w-content text-center">
@@ -397,9 +367,6 @@ export default function Page() {
               <a href="/rebuild" className="hover:text-hq-ink transition-colors">
                 Rebuild
               </a>
-              <Link href="/jaxlendar" className="hover:text-hq-ink transition-colors">
-                Jaxlendar
-              </Link>
               <a
                 href="mailto:hello@mediaseed.io"
                 className="hover:text-hq-ink transition-colors"

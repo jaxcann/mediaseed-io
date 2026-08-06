@@ -21,9 +21,6 @@ export function Footer() {
             <Link href="/apps" className="hover:text-fg transition-colors">
               Apps
             </Link>
-            <Link href="/jaxlendar" className="hover:text-fg transition-colors">
-              Jaxlendar
-            </Link>
             <a href="/rebuild" className="hover:text-fg transition-colors">
               Rebuild
             </a>

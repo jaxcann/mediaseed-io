@@ -11,6 +11,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${base}/daytapes`, lastModified, changeFrequency: "monthly", priority: 0.8 },
     { url: `${base}/daytapes/support`, lastModified, changeFrequency: "monthly", priority: 0.4 },
     { url: `${base}/daytapes/privacy`, lastModified, changeFrequency: "yearly", priority: 0.3 },
-    { url: `${base}/jaxlendar`, lastModified, changeFrequency: "daily", priority: 0.7 },
   ];
 }

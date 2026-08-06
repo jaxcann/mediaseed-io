@@ -1,13 +1,12 @@
 const items = [
   "INMOGNITO",
-  "MOSTREMOTE",
+  "MOST REMOTE",
   "OTP DAILY DOODLES",
   "CINDERELLA SPORTS",
   "LIGHTSWITCHED",
   "DAILY REBUILD",
   "SURGEPOD",
   "DAYTAPES",
-  "JAXLENDAR",
 ];
 
 function Run({ hidden = false }: { hidden?: boolean }) {
