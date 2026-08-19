@@ -1,0 +1,3073 @@
+/* ────────────────────  Fairway — the club's own fittings  ────────────────────
+
+   The Club Book set the material language. Everything else in the interface is
+   now made of the same two things the club itself is made of, and nothing else:
+
+     PAPER    the stock the book is printed on. Every document that leaves it —
+              a yardage-book page, a scorecard stub, a committee note, a chit,
+              a label on the tool tray — is cut from the same cream sheet, in
+              the same brown inks, with the same hairline rules.
+     JOINERY  the painted board the club's fixtures are made of. The honours
+              board over the door; the architect's tool tray. Dark green-black
+              paint, a brass keyline, engraved gilt lettering.
+
+   Gilt is the joint between them. ui-serif is what is written on both. There is
+   no glass and no blur left anywhere in the interface — paper is not
+   translucent, and five backdrop-filtered layers over a live WebGL canvas were
+   the single most expensive thing on the page. Removing them is a gift to the
+   frame budget, not a cost.                                                  */
+
+:root {
+  --serif: ui-serif, Georgia, "Iowan Old Style", Palatino, "Times New Roman", serif;
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+  --figs: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
+
+  /* ── paper ── the same values the book measured on cream, so a card and a
+     page of the book are literally the same ink */
+  --pg: #f7f2e6;
+  --pg-dip: #ece3cd;
+  --ink: #241f18;          /* 12.6:1 on cream */
+  --ink-2: #605646;        /*  5.6:1 */
+  --ink-3: #8d816c;        /*  3.5:1 — quiet, and still survives a squint */
+  --pencil: #857c6a;
+  --hairline: rgba(62, 46, 20, 0.15);
+  --rule: rgba(62, 46, 20, 0.20);
+  /* One wash, four strengths. Everything that used to be shaded with a cool
+     iOS system grey — hover states, chip grounds, empty tracks, tiles — is now
+     shaded with the paper's OWN pigment, so a shaded block reads as more ink on
+     the same sheet rather than a translucent panel laid over it. Measured on
+     cream: ink stays 13.6 → 10.7 : 1 across the whole ladder. */
+  --wash-0: rgba(96, 74, 40, 0.05);
+  --wash: rgba(96, 74, 40, 0.075);
+  --wash-2: rgba(96, 74, 40, 0.14);
+  --wash-3: rgba(96, 74, 40, 0.20);
+  --paper: rgba(138, 98, 23, 0.075);
+  --gilt: rgba(138, 98, 23, 0.30);
+  --gilt-wash: rgba(138, 98, 23, 0.17);
+  --ink-gilt: #7a5510;
+
+  /* the club keeps four colours: two inks and two pencils */
+  --blue: #2b5aa6;         /* fountain pen — the second ink */
+  --blue-press: #1e4482;
+  --green: #2f6b3f;        /* the course itself */
+  --gold: #8a6200;
+  --red: #a8321f;          /* the red pencil a card is marked in */
+  /* the ribbon dividers: The Day and The Members are stitched in the club's
+     two inks; these three are the only extra threads the binder needed */
+  --rib-major:  #8a3230;
+  --rib-works:  #2f6b46;
+  --rib-cttee:  #5a4a86;
+  --rib-course: #4a6b22;
+  /* HOW HARD THE PENCIL IS PRESSED. A scorecard is marked in two pencils and
+     nothing else — red under par, blue over — and the only thing that varies
+     is the pressure. These four steps existed already, but as eight hex
+     literals inlined in game.js (the par bar, the hole card's outcome bars,
+     the "plays over par" dot). Four of the eight restated a token exactly, so
+     they would have drifted the moment a token moved; one of them was a
+     SECOND red (#c1121f) marking a birdie on the hole card while the away
+     leaderboard marked the same birdie in --red, three shades away — under a
+     comment claiming the two surfaces followed the same rule. Now they do. */
+  --blue-soft:  #8ba6cd;   /* barely leaning on it */
+  --blue-mid:   #4a7fb5;
+  --red-press:  #8c1d10;   /* pressed hard enough to score the paper */
+  --tick: #1e7d3c;         /* the green pencil a finished line is ticked in */
+  --amber: #a86400;        /* the caution the same hand writes in the margin */
+
+  /* Each mark also has a wash — the same pigment, thinned, for the ground a
+     marked figure sits on. There is no system blue, green or orange left. */
+  --pen-0: rgba(43, 90, 166, 0.09);
+  --pen: rgba(43, 90, 166, 0.14);
+  --pen-2: rgba(43, 90, 166, 0.21);
+  --tick-wash: rgba(30, 125, 60, 0.15);
+  --amber-wash: rgba(168, 100, 0, 0.15);
+  --red-wash: rgba(168, 50, 31, 0.13);
+
+  /* ── joinery ── */
+  --board:   #242b25;
+  --board-2: #171d18;
+  --board-3: #0f130f;
+  --boards:   #1f3a2c;     /* the book's own case — a greener paint than the fittings */
+  --boards-2: #24422f;     /* the spine band */
+  --brass:   #d9be84;
+  --brass-2: #ab9159;
+  --face:    #f3edda;      /* what is painted on the board */
+  --face-2:  #b0a993;
+  --keyline: rgba(217, 190, 132, 0.26);
+
+  --shadow: 0 10px 30px rgba(38, 28, 12, 0.16), 0 1px 2px rgba(38, 28, 12, 0.10);
+
+  /* ── MOTION WITH MASS ──────────────────────────────────────────────────────
+     Everything in this interface is an object, and objects of different mass do
+     not move alike. Five durations and four curves, and nothing outside them.
+
+       tick    90ms  a press, a tick, a state changing under your finger. Has
+                     no mass at all — it is a mark appearing.
+       chit   140ms  a slip of paper. Almost no mass, so it accelerates
+                     instantly and is stopped by the air, not by momentum.
+       card   190ms  a card. Light, but you can feel it land.
+       ribbon 210ms  silk. Leaves fast, overshoots nothing, settles dead.
+       page   320ms  a leaf of card, hinged. This is the heaviest thing that
+                     moves, and the only thing allowed to take a third of a
+                     second — and it never delays reading, because the
+                     destination is already typeset underneath it.
+
+     e-flick is the ribbon and the chit: 90% of the distance in the first
+     third. e-settle is for anything that arrives and stays. e-mass is the
+     page's own curve — slow off the desk, quick through the vertical,
+     cushioned as it lands. e-press is the 90ms one, and is almost linear.
+     (--ease-spring, the compatibility alias these replaced, is gone: its last
+     three callers were the progress ring, the progress bars and the upgrade
+     pip, all three of which have been brought onto the scale proper.)
+
+     FIVE DURATIONS, AND TWO KINDS OF EXCEPTION, both deliberate:
+       a DWELL is not a movement. `.floater` stays legible on the grass for
+       1.25s (1.8s when it is counting) because that is a reading time.
+       an AMBIENT LOOP is not an entrance. `.fc-live` breathes and the link
+       line's dashes march; neither one is a thing arriving, and both stop
+       dead under prefers-reduced-motion.
+     Nothing else in the stylesheet may state a duration in seconds. */
+  --t-tick: 0.09s;
+  --t-chit: 0.14s;
+  --t-card: 0.19s;
+  --t-ribbon: 0.21s;
+  --t-page: 0.32s;
+  --e-press:  cubic-bezier(0.3, 0, 0.2, 1);
+  --e-flick:  cubic-bezier(0.16, 0.9, 0.22, 1);
+  --e-settle: cubic-bezier(0.32, 0.72, 0, 1);
+  --e-mass:   cubic-bezier(0.52, 0.02, 0.22, 1);
+  /* the sky behind the club — a course theme rewrites exactly these five
+     (see applyTheme), so the page and the island change season together */
+  --sky-glow: #cfe6f4;
+  --sky-fade: rgba(207, 230, 244, 0);
+  --sky-1: #dceaf4;
+  --sky-2: #edf1e9;
+  --sky-3: #f5f2e9;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+  color: var(--ink);
+  background:
+    radial-gradient(120% 90% at 50% -10%, var(--sky-glow) 0%, var(--sky-fade) 60%),
+    linear-gradient(180deg, var(--sky-1) 0%, var(--sky-2) 55%, var(--sky-3) 100%);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* After dark the club is lit by its own lamps, not by the sky: the paper warms
+   and dims a shade, the paint goes deeper, and the brass is the brightest thing
+   on the page — exactly the way the book's cream turns under the shop lamp. */
+body.night {
+  --pg: #efe6d0;
+  --pg-dip: #e2d7bd;
+  --ink: #1e1a13;
+  --board:   #1b211c;
+  --board-2: #10150f;
+  --board-3: #0a0d09;
+  --brass:   #e6cd97;
+  --face:    #f6f1e0;
+  --keyline: rgba(230, 205, 151, 0.30);
+  --shadow: 0 14px 40px rgba(0, 0, 0, 0.42), 0 1px 2px rgba(0, 0, 0, 0.30);
+  /* silk under a lamp: the threads lift the way the brass does */
+  --rib-major:  #b1483f;
+  --rib-works:  #3f8c5c;
+  --rib-cttee:  #7566a8;
+  --rib-course: #6a8c33;
+}
+
+#scene { position: fixed; inset: 0; }
+#scene canvas { display: block; outline: none; }
+
+#overlay { position: fixed; inset: 0; pointer-events: none; z-index: 30; overflow: hidden; }
+
+/* ── CARD STOCK ──────────────────────────────────────────────────────────────
+   Every floating surface in the game is a piece of paper from the pro shop.
+   Two shadows and one rule: the ply line around the cut edge, the faint bloom
+   of light caught on the top edge, and the shadow it casts on the grass. The
+   grain is the same 64px canvas noise the book's pages carry (paperGrain()),
+   so a card and a page are the same sheet under a loupe. */
+.card {
+  background-color: var(--pg);
+  background-image: var(--grain, none);
+  border: none;
+  border-radius: 3px;
+  box-shadow:
+    0 0 0 1px var(--rule),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    var(--shadow);
+}
+
+.hidden { display: none !important; }
+
+button { font-family: inherit; border: none; background: none; cursor: pointer; color: inherit; }
+
+svg.icon {
+  width: 22px; height: 22px;
+  fill: none; stroke: currentColor;
+  stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round;
+  display: block;
+}
+
+/* ── a test instrument, not a look ───────────────────────────────────────────
+   __fairway.stillUI(true) collapses every entrance in the always-on interface
+   to its finished state. It exists because a hidden pane never ticks rAF, so a
+   CSS transition is frozen at frame one and a card driven open headlessly
+   screenshots as a ghost. With this on, what a judge photographs is what a
+   player sees a fifth of a second later. */
+body.ui-still #topbar, body.ui-still #dock, body.ui-still #milestone,
+body.ui-still #away, body.ui-still .fcard, body.ui-still .pop,
+body.ui-still #toast, body.ui-still .pair-mark, body.ui-still .route-badge,
+body.ui-still #link-chip, body.ui-still #route-chip, body.ui-still #link-label,
+body.ui-still .modal, body.ui-still .tool, body.ui-still .tool .tip,
+body.ui-still #link-ui, body.ui-still #route-ui, body.ui-still .pill {
+  transition: none !important; animation: none !important;
+}
+
+/* ── nothing that moves is load-bearing ──────────────────────────────────────
+   Every surface below reads identically with its motion switched off: the
+   entrances are all opacity-plus-a-few-pixels, so removing the pixels loses
+   nothing. Three things are handled by hand rather than blanket-disabled — the
+   floaters still need to leave (they fade in place instead of rising), the tool
+   you are holding still sits proud of the tray (it just gets there instantly),
+   and the money field still catches the light, which is a colour and not a
+   motion. */
+@media (prefers-reduced-motion: reduce) {
+  #milestone, #away, .modal, #link-label, #link-chip, #route-chip,
+  .pair-mark, #toast { animation: none !important; }
+  /* hover and press still answer in colour — that is feedback, not motion.
+     What goes is every transform and every entrance: a card, an overlay and a
+     label simply ARE there. */
+  .pop, .tool, .tool .tip, .pair-mark, .route-badge,
+  .hc-fill, .rt-fill { transition-property: opacity, background-color, color, box-shadow; }
+  .fcard, #link-ui, #route-ui { transition: none; transform: none; }
+  /* the last two transforms in the file: a note that rose, and a close mark
+     that gave under the thumb. Both simply are, now. */
+  #milestone, #bk-close { transition-property: opacity, background-color, color, box-shadow, border-color; }
+  #bk-close:hover, #bk-close:active, #milestone:hover { transform: none; }
+  .pill.shake { animation: none; }
+  /* the two AMBIENT LOOPS declared as exceptions in the token block above.
+     They are the only animations here that never end on their own, so they are
+     the only two that need stopping rather than landing; the link line keeps a
+     static dash pattern so the connector still reads as provisional. */
+  .fc-live { animation: none; }
+  .link-line { animation: none; stroke-dasharray: 9 7; }
+  .floater { animation: float-still 1.25s ease-out forwards; }
+  .floater.count { animation: float-still 1.8s ease-out forwards; }
+  @keyframes float-still { 0% { opacity: 0; } 12% { opacity: 1; } 100% { opacity: 0; } }
+}
+
+/* ── The honours board ───────────────────────────────────────────────────────
+   The five figures that used to be pills are now five engraved fields on the
+   board that hangs over the pro shop door: a brass small-caps label with the
+   figure cut beneath it, each one divided from the next by a short brass rule.
+   Nothing here scrolls, nothing here opens — it is a board, and its whole job
+   is to be true at a glance.
+
+   It is SHORTER than the menu bar it replaces (52px against 54) and carries the
+   same five answers. What it cut: the brand dot (decoration), and the two pill
+   icons — a field that says COURSE above "9 holes · Par 36" does not also need
+   a flag drawn next to it. */
+
+#topbar {
+  position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
+  z-index: 40;
+  display: flex; align-items: stretch;
+  height: 52px;
+  max-width: calc(100vw - 24px);
+  border-radius: 3px;
+  color: var(--face);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0) 44%, rgba(0, 0, 0, 0.12) 100%),
+    linear-gradient(180deg, var(--board) 0%, var(--board-2) 100%);
+  border: none;
+  box-shadow:
+    0 0 0 1px var(--board-3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    var(--shadow);
+}
+/* the keyline — one brass hairline set a few millimetres in from the edge, the
+   way a painted board is actually lined out. It is the whole ornament. */
+#topbar::after {
+  content: ''; position: absolute; inset: 4px;
+  border: 1px solid var(--keyline); border-radius: 1px;
+  pointer-events: none;
+}
+
+.brand {
+  display: flex; align-items: center;
+  padding: 0 15px 0 17px;
+  font-family: var(--serif);
+  font-size: 12.5px; font-weight: 600;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--brass);
+  white-space: nowrap;
+}
+
+.stats { display: flex; align-items: stretch; }
+
+.pill {
+  position: relative;
+  display: flex; flex-direction: column; justify-content: center; gap: 2px;
+  padding: 0 14px;
+  white-space: nowrap;
+  font-family: var(--serif);
+  font-size: 13.5px; font-weight: 500; color: var(--face);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+/* the engraved label. It lives in an attribute, not in the DOM, so the four
+   live writes per second that update these figures can never wipe it. */
+.pill::before {
+  content: attr(data-lab);
+  font-size: 8.5px; font-weight: 600;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--brass-2);
+}
+/* the short rule between fields */
+.stats .pill + .pill::after {
+  content: ''; position: absolute; left: 0; top: 13px; bottom: 13px;
+  width: 1px; background: var(--keyline);
+}
+.pill svg.icon { display: none; }
+
+/* cash is the club's brass — 9:1 on the paint, and the one figure allowed to
+   outrank the others */
+.pill.money { color: var(--brass); font-size: 17px; padding-left: 16px; }
+
+/* a board cannot bounce. When the wallet is short the figure jolts against its
+   own rule; when money lands it simply catches the light. Neither moves layout
+   and neither one can be seen from the corner of the eye as motion. */
+/* a jolt is chit weight, not page weight — 320ms is the leaf's duration and
+   made the board look like it was swaying */
+.pill.shake { animation: shake var(--t-chit) var(--e-press); }
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-3px); }
+  50% { transform: translateX(3px); }
+  75% { transform: translateX(-1.5px); }
+}
+.pill.money.tickup { animation: pill-tick var(--t-card) var(--e-press); }
+@keyframes pill-tick {
+  0%  { color: var(--brass); }
+  22% { color: #fff7e4; text-shadow: 0 0 10px rgba(230, 205, 151, 0.45); }
+  100% { color: var(--brass); text-shadow: none; }
+}
+
+/* the two fields you can press wake their label rather than growing a chip */
+#pill-stars, #pill-golfers { cursor: pointer; }
+#pill-stars:hover::before, #pill-golfers:hover::before { color: var(--brass); }
+#pill-stars:hover, #pill-golfers:hover { color: #fff8e8; }
+
+.actions { display: flex; align-items: center; gap: 5px; padding: 0 9px 0 11px; }
+
+/* ── the club's two controls ─────────────────────────────────────────────────
+   `.icon-btn` is a bare mark you can press; it lives on paper by default and
+   the board re-tunes it. `.btn-primary` is the engraved plate — the one real
+   button in the game, used for Club, Collect, Return, Done and Invite alike. */
+
+.icon-btn {
+  width: 32px; height: 32px;
+  display: grid; place-items: center;
+  border-radius: 2px;
+  color: var(--ink-3);
+  transition: background var(--t-chit) var(--e-press), color var(--t-chit) var(--e-press);
+}
+.icon-btn:hover { background: var(--wash); color: var(--ink); }
+.icon-btn:active { background: var(--wash-2); }
+.icon-btn svg.icon { width: 18px; height: 18px; }
+
+#topbar .icon-btn { color: var(--face-2); }
+#topbar .icon-btn:hover { color: var(--brass); background: rgba(217, 190, 132, 0.11); }
+#topbar .icon-btn:active { background: rgba(217, 190, 132, 0.2); }
+
+.btn-primary {
+  font-family: var(--serif);
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--face);
+  padding: 8px 15px 7px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, var(--board) 0%, var(--board-2) 100%);
+  box-shadow: 0 0 0 1px var(--board-3), inset 0 0 0 1px var(--keyline), 0 1px 2px rgba(38, 28, 12, 0.22);
+  transition: box-shadow var(--t-chit) var(--e-press), color var(--t-chit) var(--e-press), transform var(--t-tick) var(--e-press);
+}
+.btn-primary:hover { color: #fff8e6; box-shadow: 0 0 0 1px var(--board-3), inset 0 0 0 1px rgba(217, 190, 132, 0.52), 0 1px 2px rgba(38, 28, 12, 0.22); }
+.btn-primary:active { transform: translateY(1px); box-shadow: 0 0 0 1px var(--board-3), inset 0 0 0 1px var(--keyline), inset 0 2px 4px rgba(0, 0, 0, 0.34); }
+.btn-primary.big { font-size: 12.5px; padding: 13px 30px 12px; letter-spacing: 0.18em; }
+.btn-primary:disabled {
+  color: var(--ink-3); background: var(--wash);
+  box-shadow: 0 0 0 1px var(--rule); cursor: default; transform: none;
+}
+
+/* on the board the plate would vanish into the paint, so it is cut out of the
+   brass keyline instead and fills solid when you reach for it */
+#topbar .btn-primary {
+  color: var(--brass); background: none;
+  box-shadow: inset 0 0 0 1px var(--keyline);
+}
+#topbar .btn-primary:hover { color: var(--board-3); background: var(--brass); box-shadow: inset 0 0 0 1px var(--brass); }
+#topbar .btn-primary:active { transform: translateY(1px); box-shadow: inset 0 0 0 1px var(--brass), inset 0 2px 4px rgba(0, 0, 0, 0.3); }
+
+.btn-plain {
+  font-family: var(--serif);
+  font-size: 12px; font-weight: 500; letter-spacing: 0.05em;
+  color: var(--red);
+  padding: 7px 10px; border-radius: 2px;
+  transition: background var(--t-chit) var(--e-press), color var(--t-chit) var(--e-press);
+}
+.btn-plain:hover { background: rgba(168, 50, 31, 0.09); }
+
+/* ── The tool tray ───────────────────────────────────────────────────────────
+   The architect's implements, laid in a shallow painted case: the same joinery
+   as the board above, turned face up, with each group of tools sitting in its
+   own slot behind a brass division. A tool is not an app icon — it is not
+   coloured, it does not have a rounded tile, and it does not bounce. It is a
+   mark cut into the tray. The one you are holding is DRAWN OUT: it rises out of
+   its slot by two pixels, the mark goes from quiet cream to full cream, and a
+   brass bar is laid under it.
+
+   Every affordance survives intact: one click on a face, hover popovers on the
+   grouped slots, hover names on the ungrouped ones, the corner nick that says
+   there is more behind this tool, and all seventeen shortcuts. */
+
+/* left/right:0 + auto margins instead of left:50% — a fixed element anchored at
+   50% can only ever be 50vw wide, which folded the tray onto a second row */
+#dock {
+  position: fixed; bottom: 16px; left: 0; right: 0;
+  margin-inline: auto; width: max-content;
+  z-index: 40;
+  display: flex; align-items: stretch;
+  padding: 5px;
+  border-radius: 3px;
+  max-width: calc(100vw - 20px);
+  flex-wrap: wrap; justify-content: center;
+  border: none;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.16) 0%, rgba(0, 0, 0, 0) 26%, rgba(255, 255, 255, 0.05) 100%),
+    linear-gradient(180deg, var(--board-2) 0%, var(--board) 100%);
+  box-shadow:
+    0 0 0 1px var(--board-3),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.07),
+    var(--shadow);
+  /* the tray is a heavy object, so it takes a page's weight to get out of the
+     way for route view (body.route-mode / body.away, at the foot of this file) */
+  transition: opacity var(--t-page) var(--e-press);
+}
+/* the tray is lit from above, so the light falls INSIDE it — the gradient runs
+   the other way from the board's, and that alone reads as concave */
+
+.tgroup { position: relative; flex: none; display: flex; }
+/* the division between slots is a GROOVE, not a drawn line: a dark cut with the
+   light catching its far wall. Two inset shadows, and it reads as depth from
+   across the room where a single hairline read as nothing at all. */
+.tgroup + .tgroup {
+  box-shadow: inset 1px 0 0 rgba(0, 0, 0, 0.38), inset 2px 0 0 rgba(217, 190, 132, 0.16);
+}
+
+.tool {
+  position: relative; flex: none;
+  width: 50px; height: 50px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  border-radius: 2px;
+  color: var(--face-2);
+  transition: color var(--t-chit) var(--e-press), background var(--t-chit) var(--e-press), transform var(--t-chit) var(--e-flick);
+}
+.tool:hover { color: var(--face); background: rgba(217, 190, 132, 0.09); }
+.tool:active { transform: translateY(1px); }
+
+/* the tool in your hand: lifted clear of the tray, and underlined in brass */
+.tool.on {
+  color: var(--face); background: rgba(217, 190, 132, 0.13);
+  transform: translateY(-2px);
+}
+.tool.on::after {
+  content: ''; position: absolute; left: 9px; right: 9px; bottom: -1px;
+  height: 2px; background: var(--brass); border-radius: 1px;
+}
+.tool svg.icon { width: 21px; height: 21px; stroke-width: 1.6; }
+.tool .price {
+  font-family: var(--figs);
+  font-size: 8.5px; font-weight: 500; letter-spacing: 0.02em;
+  color: var(--brass-2);
+  font-variant-numeric: tabular-nums;
+}
+.tool.on .price { color: var(--brass); }
+
+/* the corner nick that says "there is more behind this one" — a chamfer taken
+   off the slot, brass, so it reads as part of the tray rather than a badge */
+.tool .more {
+  position: absolute; right: 3px; bottom: 3px;
+  width: 0; height: 0;
+  border-top: 4px solid transparent;
+  border-right: 4px solid var(--brass-2);
+  opacity: 0.55;
+  transition: opacity var(--t-chit) var(--e-press), border-right-color var(--t-chit) var(--e-press);
+}
+.tool.on .more, .tgroup:hover .more { opacity: 1; border-right-color: var(--brass); }
+
+/* the name on an ungrouped tool: a paper label, because everything written down
+   in this club is written on paper */
+.tool .tip {
+  position: absolute; bottom: calc(100% + 9px); left: 50%; transform: translateX(-50%) translateY(3px);
+  background-color: var(--pg); background-image: var(--grain, none);
+  color: var(--ink);
+  font-family: var(--serif); font-size: 11.5px; font-weight: 500; letter-spacing: 0.01em;
+  padding: 5px 10px 4px; border-radius: 2px;
+  box-shadow: 0 0 0 1px var(--rule), 0 4px 12px rgba(38, 28, 12, 0.22);
+  white-space: nowrap; pointer-events: none;
+  opacity: 0; transition: opacity var(--t-chit) var(--e-press), transform var(--t-card) var(--e-settle);
+  z-index: 5;
+}
+.tool:hover .tip { opacity: 1; transform: translateX(-50%) translateY(0); }
+.tool .tip .tip-cost {
+  font-family: var(--figs); font-size: 9.5px; font-weight: 600;
+  color: var(--ink-gilt); margin-left: 9px; letter-spacing: 0.04em;
+}
+
+/* ── The tool label ──────────────────────────────────────────────────────────
+   A group's implements, named and priced on a slip of the same paper. Hover
+   lifts it after a beat so a pass along the tray never strobes; picking
+   anything hushes it until you step away. Both behaviours are unchanged. */
+
+.pop {
+  position: absolute; bottom: 100%; left: 50%;
+  padding-bottom: 9px;              /* bridges the gap so the hover survives it */
+  z-index: 6;
+  opacity: 0; pointer-events: none;
+  transform: translateX(-50%) translateY(5px);
+  transform-origin: 50% 100%;
+  transition: opacity var(--t-chit) var(--e-press), transform var(--t-card) var(--e-settle);
+}
+.tgroup:hover .pop {
+  opacity: 1; pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+  transition-delay: 110ms;
+}
+.tgroup.hushed .pop { opacity: 0 !important; pointer-events: none !important; transition-delay: 0s; }
+/* `.peek` is hover without a pointer — it exists so __fairway.peekTool() can
+   drive the labels and the hover names headlessly. It sets `transition: none`
+   on purpose: in a hidden pane rAF never ticks, so a transition is frozen at
+   its first frame and a driven label would read as invisible forever. Peek is
+   the instant path, and it is the only way to see either one in a screenshot
+   of a pane that is not painting. */
+.tgroup.peek .pop {
+  opacity: 1; pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+  transition: none;
+}
+.tgroup.peek .more { opacity: 1; border-right-color: var(--brass); }
+.tgroup.peek .tip { opacity: 1; transform: translateX(-50%) translateY(0); transition: none; }
+
+.pop-card {
+  width: 262px;
+  padding: 0 0 5px;
+  border-radius: 3px;
+}
+/* the label's own heading, printed across the head of the slip under a rule */
+.pop-h {
+  font-family: var(--serif);
+  font-size: 9.5px; font-weight: 600; letter-spacing: 0.17em;
+  text-transform: uppercase; color: var(--ink-gilt);
+  padding: 9px 12px 8px;
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: 4px;
+}
+.pop-item {
+  position: relative;                 /* the margin tick on `.on` hangs off this */
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 6px 11px; border-radius: 2px;
+  text-align: left;
+  transition: background var(--t-chit) var(--e-press);
+}
+.pop-item:hover { background: var(--wash); }
+/* the tool you are holding is ticked in the margin, not filled in blue */
+.pop-item.on { background: var(--paper); }
+.pop-item.on .pi-icon, .pop-item.on .pi-text b { color: var(--ink-gilt); }
+.pop-item.on::before {
+  content: ''; position: absolute; left: 0;
+  width: 2px; height: 22px; background: var(--ink-gilt);
+}
+.pi-icon { flex: none; display: grid; place-items: center; width: 24px; color: var(--ink-2); }
+.pi-icon svg.icon { width: 19px; height: 19px; stroke-width: 1.6; }
+.pi-text { flex: 1; min-width: 0; }
+.pi-text b {
+  display: block; font-family: var(--serif);
+  font-size: 13px; font-weight: 600; letter-spacing: 0.005em; color: var(--ink);
+}
+.pi-text i {
+  display: block; font-style: normal;
+  font-size: 11px; line-height: 1.32; color: var(--ink-3); margin-top: 1px;
+}
+.pi-meta { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+.pi-meta em {
+  font-style: normal; font-family: var(--figs);
+  font-size: 10.5px; font-weight: 600;
+  color: var(--ink-gilt); font-variant-numeric: tabular-nums;
+}
+/* the shortcut, stamped */
+.pi-meta kbd {
+  font-family: var(--figs); font-size: 9px; font-weight: 600;
+  color: var(--ink-2); text-transform: uppercase;
+  box-shadow: inset 0 0 0 1px var(--rule);
+  border-radius: 2px; padding: 1px 4px; min-width: 15px; text-align: center;
+}
+
+/* ── The committee note ──────────────────────────────────────────────────────
+   What the green committee has asked for next, typed on a slip and left where
+   the architect will see it. Cream stock, a ruled list, and a red pencil tick
+   through anything already done. It is the Progress chapter of the book in
+   miniature, and pressing it opens that chapter — so it never earns a button. */
+
+#milestone {
+  position: fixed; left: 16px; bottom: 16px;
+  z-index: 35;
+  width: 262px;
+  padding: 13px 15px 11px;
+  border-radius: 3px;
+  cursor: pointer;
+  animation: rise var(--t-card) var(--e-settle);
+  /* the note fades out of the way for route view at a page's weight, but
+     answers a pointer in a chit's — feedback should never make you wait for it */
+  transition: opacity var(--t-page) var(--e-press),
+              transform var(--t-tick) var(--e-press),
+              box-shadow var(--t-chit) var(--e-press),
+              background-color var(--t-chit) var(--e-press);
+}
+@keyframes rise { from { opacity: 0; transform: translateY(12px); } }
+
+/* the note is headed the way a club notice is headed: a rule, a small-caps
+   line, and the request underneath in the club's serif */
+.ms-kicker {
+  font-family: var(--serif);
+  font-size: 9px; font-weight: 600; letter-spacing: 0.17em;
+  text-transform: uppercase; color: var(--ink-gilt);
+  margin-bottom: 4px;
+}
+#milestone h3 {
+  font-family: var(--serif);
+  font-size: 16.5px; font-weight: 600; letter-spacing: 0.005em; color: var(--ink);
+}
+#milestone p { font-size: 11.5px; color: var(--ink-2); line-height: 1.42; margin: 4px 0 9px; }
+
+/* ruled rows, as a list on club paper is ruled */
+.ms-row {
+  display: flex; align-items: center; gap: 9px;
+  padding: 5px 1px;
+}
+.ms-row + .ms-row { border-top: 1px solid var(--hairline); }
+.ms-icon {
+  flex: none;
+  width: 22px; height: 22px;
+  display: grid; place-items: center;
+  border-radius: 2px;
+  color: var(--ink-3);
+  /* a job getting ticked off is a MARK appearing, not a page moving */
+  transition: color var(--t-tick) var(--e-press), background var(--t-tick) var(--e-press);
+}
+.ms-icon svg.icon { width: 15px; height: 15px; stroke-width: 1.6; }
+.ms-row.done .ms-icon { background: none; color: var(--green); }
+.ms-label { flex: 1; font-size: 12px; font-weight: 500; color: var(--ink); }
+/* struck through in red pencil, the way a committee crosses off a job */
+.ms-row.done .ms-label {
+  color: var(--ink-3);
+  text-decoration: line-through;
+  text-decoration-color: rgba(168, 50, 31, 0.6);
+  text-decoration-thickness: 1.5px;
+}
+.ms-prog {
+  font-family: var(--figs); font-size: 11px; font-weight: 500;
+  color: var(--ink-2); font-variant-numeric: tabular-nums;
+}
+.ms-row.done .ms-prog { color: var(--green); }
+.ms-row.done .ms-prog svg.icon { width: 14px; height: 14px; stroke-width: 2.2; }
+
+.ms-reward {
+  margin-top: 8px; padding-top: 8px;
+  border-top: 1px solid var(--rule);
+  font-family: var(--serif);
+  font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3);
+  display: flex; justify-content: space-between; align-items: baseline;
+}
+.ms-reward b {
+  font-family: var(--figs); font-size: 12px; letter-spacing: 0;
+  color: var(--ink-gilt); font-weight: 600; font-variant-numeric: tabular-nums;
+}
+
+/* paper does not float up when you point at it — it takes a little more light */
+#milestone:hover { background-color: #fbf7ee; box-shadow: 0 0 0 1px var(--gilt), inset 0 1px 0 rgba(255, 255, 255, 0.6), var(--shadow); }
+#milestone:active { transform: translateY(1px); }
+
+/* ── The Club Book ───────────────────────────────────────────────────────────
+   Not a panel — an object. A cased ledger with a paper block you can see the
+   thickness of, a spine gutter, six ribbon tabs down the fore-edge and a leaf
+   that actually turns. Everything the six sections already drew is printed onto
+   it unchanged: the book overrides the SHARED TOKENS (--ink, --hairline, --blue
+   …) rather than restyling four hundred rules, so a page of the tee sheet or of
+   the collection becomes ink on paper by inheritance.
+
+   Geometry is one chain of lengths so JS and CSS cannot disagree:
+     spread = --bw − 2·--px      column = (spread − --gut) / 2
+   The flow is ONE multi-column box laid across the whole spread with the gutter
+   as its column-gap, so the browser paginates the section for us and a page
+   turn is a translate. */
+
+#scrim {
+  position: fixed; inset: 0; z-index: 45;
+  /* the desk the book is opened on: the room drops away, one warm pool of
+     light stays over the page */
+  background:
+    radial-gradient(58% 62% at 50% 48%, rgba(255, 240, 205, 0.20) 0%, rgba(255, 240, 205, 0) 70%),
+    rgba(24, 22, 17, 0.42);
+  opacity: 0; transition: opacity var(--t-page) var(--e-press);
+}
+#scrim.show { opacity: 1; }
+
+#book {
+  --bw: 880px; --bh: 626px;
+  --px: 34px;      /* outer paper margin */
+  --pt: 44px;      /* running-head band */
+  --pb: 34px;      /* folio band */
+  --gut: 68px;     /* the gutter — and the flow's column-gap */
+  --spw: calc(var(--bw) - 2 * var(--px));
+  --colw: calc((var(--spw) - var(--gut)) / 2);
+  --tabw: 126px;
+
+  /* THE BOOK DECLARES NO COLOUR. It used to carry a private copy of fifteen
+     ink tokens, from the days when the rest of the interface was a grey panel
+     and the book was the only paper in the game. Every one of those fifteen had
+     since drifted into being character-for-character identical to :root — dead
+     weight that still had to be read, still had to be kept in step by hand, and
+     which is exactly where the two self-referential declarations (`--pg: var(--pg)`,
+     `--blue: var(--blue)`) hid long enough to leave every page unpainted. A
+     block that only ever restates what it inherits cannot fail loudly; it can
+     only fail silently. So it is gone, and the book is now ink on paper by
+     inheritance, like every other document the club prints.
+
+     Verify with __fairway.ui().book.tokens — it reads the live values off the
+     spread and asserts them against :root. */
+
+  position: fixed; inset: 0; z-index: 50;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none;
+}
+/* After dark the page is lit by the pro shop lamp, not the sky — a shade warmer
+   and a shade brighter than the paper the rest of the club is cut from, because
+   the book is the one sheet with a lamp actually over it. This is the ONLY
+   colour the book declares for itself, and it is a difference, not a copy. */
+body.night #book { --pg: #f2ead6; --pg-dip: #e4d9bf; }
+
+@media (max-width: 950px) { #book { --bw: 740px; --gut: 56px; --px: 28px; } }
+@media (max-width: 810px) { #book { --bw: 640px; --tabw: 96px; } }
+@media (max-height: 720px) { #book { --bh: 552px; } }
+@media (max-height: 630px) { #book { --bh: 470px; --pt: 36px; --pb: 28px; } }
+
+/* ── the object ─────────────────────────────────────────────────────────── */
+
+.bk-block {
+  position: relative;
+  width: var(--bw); height: var(--bh);
+  flex: none;
+  pointer-events: auto;
+  perspective: 2200px;
+  transform-origin: 50% 100%;
+  /* lifted onto the desk: rises, tilts flat, settles. 260ms, and the type is
+     readable from the first frame — nothing here delays reading. */
+  transform: translateY(30px) rotateX(9deg) scale(0.965);
+  opacity: 0;
+  transition: transform var(--t-page) var(--e-settle), opacity var(--t-card) var(--e-press);
+}
+#book.open .bk-block { transform: none; opacity: 1; }
+
+/* the case: boards a shade proud of the paper on every side */
+.bk-boards {
+  position: absolute; inset: -9px -8px -10px -8px; z-index: 0;
+  border-radius: 5px 9px 9px 5px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(0, 0, 0, 0.10)),
+    linear-gradient(90deg, var(--boards) 0 26px, var(--boards-2) 26px 34px, var(--boards) 34px);
+  box-shadow: 0 34px 70px rgba(18, 24, 18, 0.42), 0 3px 10px rgba(18, 24, 18, 0.30);
+}
+body.night .bk-boards { box-shadow: 0 34px 78px rgba(0, 0, 0, 0.62), 0 0 0 0.5px rgba(255, 255, 255, 0.10); }
+
+/* the fore-edge: the pages you have read on the left, the ones left on the
+   right. Width is set from the live page position, so the block itself says
+   where you are in the section — the honest version of a scrollbar. */
+.bk-edge {
+  position: absolute; top: 5px; bottom: 5px; z-index: 1;
+  width: var(--w, 5px);
+  pointer-events: none;
+}
+.bk-edge.before {
+  left: 0; transform: translateX(-100%);
+  border-radius: 3px 0 0 3px;
+  background:
+    linear-gradient(90deg, rgba(120, 96, 50, 0.30), rgba(120, 96, 50, 0) 45%),
+    repeating-linear-gradient(90deg, #f4eddb 0 1px, #cbbf9f 1px 2px);
+  box-shadow: inset -4px 0 6px -2px rgba(60, 44, 20, 0.34);
+}
+.bk-edge.after {
+  right: 0; transform: translateX(100%);
+  border-radius: 0 3px 3px 0;
+  background:
+    linear-gradient(270deg, rgba(120, 96, 50, 0.30), rgba(120, 96, 50, 0) 45%),
+    repeating-linear-gradient(90deg, #cbbf9f 0 1px, #f4eddb 1px 2px);
+  box-shadow: inset 4px 0 6px -2px rgba(60, 44, 20, 0.34);
+}
+
+/* ── the spread ─────────────────────────────────────────────────────────── */
+
+.bk-spread {
+  position: absolute; inset: 0; z-index: 2;
+  border-radius: 2px 5px 5px 2px;
+  overflow: visible;
+  perspective: 2000px;
+  background-color: var(--pg);
+  background-image:
+    /* the dip either side of the spine, where the paper curves into the
+       binding — one gradient, no bevel */
+    linear-gradient(90deg,
+      rgba(62, 46, 20, 0.05) 0, rgba(62, 46, 20, 0) 6%,
+      rgba(62, 46, 20, 0) 42%, rgba(62, 46, 20, 0.085) 49.4%,
+      rgba(62, 46, 20, 0.11) 50%, rgba(62, 46, 20, 0.085) 50.6%,
+      rgba(62, 46, 20, 0) 58%, rgba(62, 46, 20, 0) 94%, rgba(62, 46, 20, 0.05) 100%),
+    var(--grain, none);
+  box-shadow: inset 0 0 0 0.5px rgba(62, 46, 20, 0.10);
+}
+/* the stitched-in signature: one hairline down the fold, and nothing else */
+.bk-gutter {
+  position: absolute; top: 12px; bottom: 12px; left: 50%; width: 1px;
+  transform: translateX(-0.5px);
+  background: linear-gradient(180deg, rgba(62, 46, 20, 0) 0, rgba(62, 46, 20, 0.16) 12%,
+    rgba(62, 46, 20, 0.16) 88%, rgba(62, 46, 20, 0) 100%);
+  z-index: 4; pointer-events: none;
+}
+
+.bk-paper {
+  position: absolute; left: var(--px); right: var(--px); top: var(--pt); bottom: var(--pb);
+  overflow: hidden;
+  z-index: 3;
+}
+/* ONE flow, two columns wide, gutter for a gap — the browser paginates */
+.bk-flow {
+  position: absolute; top: 0; left: 0;
+  width: 100%; height: 100%;
+  column-width: var(--colw);
+  column-gap: var(--gut);
+  column-fill: auto;
+  font-variant-numeric: tabular-nums;
+  /* what is written on the page is written in the book's ink, not the app's */
+  color: var(--ink);
+}
+
+/* printed furniture: running heads at the top, folios at the outer corners */
+.bk-print { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
+.bk-run, .bk-fol {
+  position: absolute;
+  font-family: var(--serif);
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+.bk-run {
+  top: calc(var(--pt) - 26px);
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.16em; text-transform: uppercase;
+}
+.bk-run.l { left: var(--px); }
+.bk-run.r { right: var(--px); text-align: right; letter-spacing: 0.09em; font-variant-numeric: tabular-nums; }
+.bk-fol {
+  bottom: calc(var(--pb) - 24px);
+  font-size: 12px; font-variant-numeric: tabular-nums lining-nums;
+  color: var(--ink-3);
+}
+.bk-fol.l { left: var(--px); }
+.bk-fol.r { right: var(--px); }
+/* the printed rule under the running head, on each page */
+.bk-print::before, .bk-print::after {
+  content: ''; position: absolute; top: calc(var(--pt) - 9px); height: 1px;
+  background: var(--hairline);
+}
+.bk-print::before { left: var(--px); width: var(--colw); }
+.bk-print::after { right: var(--px); width: var(--colw); }
+
+/* ── the leaf ───────────────────────────────────────────────────────────── */
+/* Built only while a page is in the air: a static half holding the page being
+   left behind, and a two-faced leaf hinged on the spine. Both are clones — the
+   real, interactive flow is already sitting at the destination underneath. */
+
+.bk-turn {
+  position: absolute; inset: var(--pt) var(--px) var(--pb); z-index: 6;
+  display: none; pointer-events: none;
+  transform-style: preserve-3d;
+}
+.bk-turn.on { display: block; }
+.bk-hold {
+  position: absolute; top: 0; bottom: 0;
+  width: calc(var(--colw) + var(--gut) / 2);
+  overflow: hidden;
+  background: var(--pg);
+}
+.bk-hold.l { left: 0; }
+.bk-hold.r { right: 0; }
+.bk-leaf {
+  position: absolute; top: 0; bottom: 0;
+  left: calc(var(--colw) + var(--gut) / 2);
+  width: calc(var(--colw) + var(--gut) / 2);
+  transform-origin: left center;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+.bk-face {
+  position: absolute; inset: 0;
+  overflow: hidden;
+  background: var(--pg);
+  backface-visibility: hidden;
+  box-shadow: 2px 0 14px rgba(62, 46, 20, 0.16);
+}
+.bk-face.back { transform: rotateY(180deg); }
+/* the leading edge — the lit hair of paper the eye actually reads as a page */
+.bk-lead {
+  position: absolute; top: 0; bottom: 0; right: -1px; width: 3px;
+  background: linear-gradient(90deg, rgba(255, 252, 242, 0.9), rgba(180, 165, 130, 0.55));
+  border-radius: 0 2px 2px 0;
+}
+/* The shadow the raised leaf throws onto the page it is leaving — strongest at
+   the spine, where the paper is closest to it. It sits exactly over the held
+   half, so it can never darken the page being revealed. */
+.bk-cast {
+  position: absolute; top: 0; bottom: 0; left: 0;
+  width: calc(var(--colw) + var(--gut) / 2);
+  pointer-events: none; opacity: 0;
+  background: linear-gradient(90deg, rgba(62, 46, 20, 0) 34%, rgba(62, 46, 20, 0.30));
+}
+.bk-cast.back {
+  left: auto; right: 0;
+  background: linear-gradient(270deg, rgba(62, 46, 20, 0) 34%, rgba(62, 46, 20, 0.30));
+}
+
+/* the corner you can take hold of */
+.bk-grab {
+  position: absolute; bottom: 0; z-index: 7;
+  width: 58px; height: 58px;
+  cursor: grab;
+  /* a corner you cannot turn must not eat the click of whatever is under it */
+  opacity: 0; pointer-events: none;
+  transition: opacity var(--t-chit) var(--e-press);
+  touch-action: none;
+}
+.bk-grab.fwd {
+  right: 0; border-radius: 0 0 5px 0;
+  background: linear-gradient(315deg, rgba(62, 46, 20, 0.10) 0, rgba(62, 46, 20, 0) 46%);
+}
+.bk-grab.back {
+  left: 0; border-radius: 0 0 0 5px;
+  background: linear-gradient(45deg, rgba(62, 46, 20, 0.10) 0, rgba(62, 46, 20, 0) 46%);
+}
+.bk-grab.can { opacity: 1; pointer-events: auto; }
+.bk-grab.fwd:hover { background: linear-gradient(315deg, rgba(62, 46, 20, 0.2) 0, rgba(62, 46, 20, 0) 52%); }
+.bk-grab.back:hover { background: linear-gradient(45deg, rgba(62, 46, 20, 0.2) 0, rgba(62, 46, 20, 0) 52%); }
+.bk-grab:active { cursor: grabbing; }
+
+/* ── the cover ──────────────────────────────────────────────────────────── */
+
+.bk-cover {
+  position: absolute; inset: -9px -8px -10px -8px; z-index: 8;
+  border-radius: 5px 9px 9px 5px;
+  transform-origin: left center;
+  transform: rotateY(-180deg);
+  backface-visibility: hidden;
+  transition: transform var(--t-page) var(--e-mass);
+  background:
+    linear-gradient(115deg, rgba(255, 255, 255, 0.07), rgba(0, 0, 0, 0.12)),
+    var(--boards);
+  background-blend-mode: normal;
+  box-shadow: 0 26px 60px rgba(18, 24, 18, 0.4);
+  pointer-events: none;
+  display: grid; place-items: center;
+}
+#book.shut .bk-cover { transform: rotateY(0deg); }
+.bk-cover-in {
+  display: grid; justify-items: center; gap: 8px;
+  padding: 26px 40px;
+  border: 1px solid rgba(212, 186, 120, 0.42);
+  border-radius: 2px;
+  color: #ddc98c;
+  font-family: var(--serif);
+}
+/* the crest, blocked in gilt on the board — the club's own drawing, in the same
+   stroke weight as every other mark in the game, rather than the operating
+   system's picture of a golf flag pushed through three filters to look old */
+.bk-crest svg {
+  width: 26px; height: 26px; display: block;
+  fill: none; stroke: currentColor; stroke-width: 1.6;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.bk-cname { font-size: 30px; letter-spacing: 0.22em; text-transform: uppercase; }
+.bk-crule { width: 54px; height: 1px; background: rgba(212, 186, 120, 0.5); }
+.bk-ctitle { font-size: 12px; letter-spacing: 0.42em; text-transform: uppercase; opacity: 0.8; }
+
+/* ── the ribbon tabs ────────────────────────────────────────────────────── */
+
+.bk-tabs {
+  position: relative; z-index: 3;
+  flex: none; width: var(--tabw);
+  align-self: flex-start;
+  margin-top: calc(50vh - var(--bh) / 2 + 34px);
+  display: flex; flex-direction: column; gap: 4px;
+  pointer-events: auto;
+}
+.bk-tab {
+  position: relative;
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 10px 9px 14px;
+  margin-left: -10px;
+  border-radius: 0 5px 5px 0;
+  text-align: left;
+  background: linear-gradient(90deg, var(--pg-dip), var(--pg) 34%);
+  box-shadow: 0 2px 5px rgba(18, 24, 18, 0.22), inset 0 0.5px 0 rgba(255, 255, 255, 0.5);
+  color: var(--ink-2);
+  font-size: 11.5px; font-weight: 600; letter-spacing: 0.01em;
+  white-space: nowrap;
+  transform: translateX(0);
+  transition: transform var(--t-ribbon) var(--e-flick), color var(--t-chit) var(--e-press), background var(--t-chit) var(--e-press);
+}
+.bk-tab i {
+  flex: none; width: 3px; height: 15px; border-radius: 2px;
+  background: var(--tc, var(--ink-3));
+}
+.bk-tab:hover { transform: translateX(4px); color: var(--ink); }
+.bk-tab.on {
+  transform: translateX(9px);
+  color: var(--ink);
+  font-family: var(--serif); font-size: 13px; font-weight: 600; letter-spacing: 0.01em;
+  background: var(--pg);
+  box-shadow: 0 3px 9px rgba(18, 24, 18, 0.26);
+}
+.bk-tab.on i { background: var(--tc, var(--ink-gilt)); width: 4px; height: 19px; }
+.bk-tab:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+/* the seventh tab in the column, and the only one that is not a section */
+.bk-close {
+  display: flex; align-items: center; gap: 8px;
+  margin: 14px 0 0 -10px;
+  padding: 8px 10px 8px 14px;
+  border-radius: 0 5px 5px 0;
+  background: rgba(247, 242, 230, 0.13);
+  color: rgba(247, 242, 230, 0.78);
+  font-size: 11.5px; font-weight: 600; white-space: nowrap;
+  transition: background var(--t-chit) var(--e-press), transform var(--t-ribbon) var(--e-flick), color var(--t-chit) var(--e-press);
+}
+.bk-close::after { content: 'Close the book'; }
+.bk-close:hover { background: rgba(247, 242, 230, 0.24); color: var(--pg); transform: translateX(4px); }
+.bk-close:active { transform: translateX(2px) scale(0.98); }
+.bk-close svg.icon { width: 13px; height: 13px; stroke-width: 2.2; }
+
+/* ── printing the six sections onto paper ───────────────────────────────── */
+/* What remains here is TYPESETTING — which face a line is set in, which tier of
+   ink it is written in, and where the browser may not break a column. Nothing
+   here paints a ground any more.
+
+   There used to be a second block above this one that re-pointed seventeen
+   component backgrounds at the paper's washes. By the time the material pass
+   finished, ten of those seventeen were declaring the value the component
+   already had, and the other seven were silently overriding it from a distance
+   — which is how a collection tile that is explicitly commented "not a locked
+   box, an unwritten line in the ledger, waiting for a name" came to be painted
+   the same weight as the tiles that HAVE names on them, for as long as the grid
+   has existed. A ground is now declared exactly once, on the object that has
+   it. The invisible layer is gone. */
+
+/* Serif for what is written in the book; SF stays on everything you press. */
+.bk-flow .cv-h, .bk-flow .ts-date, .bk-flow .ts-hour, .bk-flow .col-tier b,
+.bk-flow .tr-name, .bk-flow .tl-title, .bk-flow .hb-l, .bk-flow .st-th,
+.bk-flow .bk-plate h4 {
+  font-family: var(--serif);
+  text-transform: none; letter-spacing: 0.01em;
+}
+.bk-flow .cv-h { font-size: 14px; font-weight: 600; color: var(--ink); border-bottom: 1px solid var(--rule); padding-bottom: 4px; }
+.bk-flow .cv-hr { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif; color: var(--ink-2); }
+.bk-flow .ts-hour { font-size: 12.5px; font-weight: 600; color: var(--ink-2); letter-spacing: 0.02em; }
+.bk-flow .cv-tile b, .bk-flow .hb-v, .bk-flow .pg-pct span, .bk-flow .tr-purse {
+  font-family: var(--serif); font-weight: 600; letter-spacing: 0;
+}
+.bk-flow .ts-who, .bk-flow .sig-top > b, .bk-flow .st-name, .bk-flow .col-n b {
+  font-family: var(--serif); font-weight: 600; letter-spacing: 0;
+}
+/* provisional things are pencilled, written ones are inked */
+.bk-flow .ts-slot.open .ts-who, .bk-flow .cv-est, .bk-flow .up-eff.then,
+.bk-flow .col-t.unmet, .bk-flow .hb-cell.empty .hb-m { color: var(--pencil); }
+.bk-flow .ts-slot.open .ts-who { font-family: var(--serif); font-style: italic; font-weight: 400; }
+
+/* the sheet's own rules and column divisions are declared with `.ts-slot`
+   itself, further down — nothing about them needs the book to be true */
+/* a signature is written on a ruled line too */
+.bk-flow .st-row.sig { border-bottom: 1px solid rgba(62, 46, 20, 0.11); }
+.bk-flow .st-row.sig:last-child { border-bottom: none; }
+
+/* the purchase, written into the book: one pen stroke across the new level */
+@keyframes bk-ink { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+.bk-flow .up-lvl.wrote {
+  color: var(--blue); font-family: var(--serif); font-weight: 600;
+  animation: bk-ink var(--t-page) var(--e-mass);
+}
+
+/* nothing may split across a page in the middle of itself */
+.bk-flow .cv-tile, .bk-flow .up-row, .bk-flow .ts-slot, .bk-flow .ts-day,
+.bk-flow .hb, .bk-flow .col-t, .bk-flow .cv-hole, .bk-flow .tr-cand,
+.bk-flow .tl-item, .bk-flow .ts-vipnext, .bk-flow .tr-ev, .bk-flow .tr-res,
+.bk-flow .pg-top, .bk-flow .cv-tiles, .bk-flow .st-row:not(.on),
+.bk-flow .bk-plate, .bk-flow .ts-closed, .bk-flow .col-tier { break-inside: avoid; }
+.bk-flow .hc-bars, .bk-flow .cv-legend, .bk-flow .th-row, .bk-flow .th,
+.bk-flow .up-eff, .bk-flow .st-bar, .bk-flow .st-ax { break-inside: avoid; }
+.bk-flow .cv-h, .bk-flow .ts-hour, .bk-flow .col-tier, .bk-flow .cv-parbar,
+.bk-flow .bk-plate h4 { break-after: avoid; break-after: avoid-column; }
+
+/* a panel opening inside a page that has just turned: it fades, it does not
+   slide — the page turn already carried the motion. Shared with the away card.
+   It used to read `transform: translateX(var(--vx, 0))`. Nothing in the game
+   ever set --vx — not one line of CSS, not one setProperty — so the knob
+   always resolved to its fallback and the transform was `translateX(0)`: a
+   no-op that still promoted a layer, and a hook that LOOKED like a system
+   without being one. The comment above already said this must not slide; now
+   the keyframe says it too. */
+@keyframes view-in { from { opacity: 0; } }
+
+/* the bookplate at the end of the Course section — the one destructive act */
+.bk-plate { margin-top: 16px; padding: 14px 0 4px; border-top: 1px solid var(--rule); }
+.bk-plate h4 { font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 3px; }
+.bk-plate p { font-size: 11.5px; color: var(--ink-2); line-height: 1.45; margin-bottom: 9px; }
+
+/* Nothing to watch, so nothing to animate: the book simply arrives. The scrim
+   carries its own flag — it is a SIBLING of #book, so it could never be reached
+   by a descendant selector, and for as long as that was how this was written the
+   desk never appeared in a pane that was not painting. */
+#book.nofx .bk-block, #book.nofx .bk-cover, #book.nofx .bk-tab,
+#scrim.nofx { transition: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .bk-block, .bk-cover, .bk-tab, #scrim { transition: none; }
+  .bk-block { transform: none; }
+  /* Every pressable in the game answers in two ways: it changes colour, and it
+     gives by a pixel. The colour is feedback and stays; the pixel is motion and
+     goes. Listed once, here, for all of them — the whole reduced-motion path is
+     "the ink still does everything, the paper simply does not move". */
+  .up-buy, .hc-route, .cv-link, .cv-hole, .col-t, .st-head, .sig-head,
+  .th, .ts-part, .up-row, .icon-btn, .btn-primary, .btn-plain, .pop-item {
+    transition-property: background, background-color, color, box-shadow, border-color, opacity;
+  }
+  .up-buy:active, .hc-route:active, .btn-primary:active, .cv-link:active,
+  .up-buy:hover, .bk-close:hover, .bk-close:active { transform: none; }
+}
+
+/* ── Upgrades view — a tier ladder per track ─────────────────────────────── */
+
+.up-row {
+  padding: 12px 10px 11px;
+  border-radius: 3px;
+  transition: background var(--t-chit) var(--e-press);
+}
+.up-row:hover { background: var(--wash-2); }
+.up-row + .up-row { box-shadow: inset 0 0.5px 0 var(--hairline); }
+
+.up-head { display: flex; align-items: center; gap: 12px; }
+
+/* The mark for a track: drawn on the page in the gilt the book writes its own
+   headings in, on the paper's own wash, ruled off with a hairline. It carries
+   no track colour and never will — see trackRowHTML(). */
+.up-icon {
+  flex: none;
+  width: 40px; height: 40px;
+  display: grid; place-items: center;
+  border-radius: 2px;
+  color: var(--ink-gilt);
+  background: var(--paper);
+  box-shadow: inset 0 0 0 1px var(--gilt);
+}
+.up-icon svg.icon { width: 21px; height: 21px; }
+/* a level already bought, inked in */
+.up-pip.on { background: var(--ink-gilt); }
+
+.up-body { flex: 1; min-width: 0; }
+.up-name { font-size: 14px; font-weight: 600; display: flex; align-items: baseline; gap: 7px; }
+.up-lvl { font-size: 11px; font-weight: 600; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.up-lvl.done { color: var(--tick); }
+.up-desc { font-size: 11.5px; color: var(--ink-2); margin-top: 2px; line-height: 1.35; }
+
+/* The price, ruled off and waiting to be signed against — the same hand as the
+   hole card's `.hc-route`, because they are the same gesture: an instruction
+   written on the page. It was the last blue capsule button left in the book,
+   and a capsule was the one thing on the spread you could not have printed.
+   The figure keeps its tabular numerals and gains gilt on approach. */
+.up-buy {
+  flex: none;
+  font-family: var(--serif);
+  font-size: 12.5px; font-weight: 600; letter-spacing: 0.015em;
+  color: var(--ink-2);
+  padding: 7px 12px 6px; border-radius: 2px;
+  box-shadow: inset 0 0 0 1px var(--rule);
+  font-variant-numeric: tabular-nums;
+  transition: background var(--t-chit) var(--e-press),
+              color var(--t-chit) var(--e-press),
+              box-shadow var(--t-chit) var(--e-press),
+              transform var(--t-tick) var(--e-press);
+}
+.up-buy:hover { background: var(--paper); color: var(--ink-gilt); box-shadow: inset 0 0 0 1px var(--gilt); }
+.up-buy:active { background: var(--wash-2); transform: translateY(1px); }
+.up-buy:disabled {
+  background: none; color: var(--ink-3); cursor: default; transform: none;
+  box-shadow: inset 0 0 0 1px var(--hairline);
+}
+.up-max { flex: none; font-size: 11.5px; font-weight: 700; color: var(--tick); padding: 0 4px; }
+
+.up-pips { display: flex; align-items: center; gap: 4px; margin: 11px 2px 8px; }
+.up-pip {
+  flex: 1; height: 5px; border-radius: 1px;
+  background: var(--wash-3);
+  transition: background var(--t-card) var(--e-press);
+}
+/* a pip filling is a level being INKED IN, not a thing that bounces: the mark
+   is drawn left to right at card weight and stops dead. The old 620ms spring
+   swelled the bar to 2.1x its height, which is the one gesture on the page that
+   read as a phone app rather than a nib. */
+.up-pip.fill { animation: pip-fill var(--t-card) var(--e-flick); transform-origin: left center; }
+@keyframes pip-fill {
+  from { transform: scaleX(0.18); opacity: 0.5; }
+  to   { transform: scaleX(1); opacity: 1; }
+}
+.up-over { font-size: 10px; font-weight: 700; color: var(--ink-3); margin-left: 3px; font-variant-numeric: tabular-nums; }
+
+.up-eff {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  padding: 0 2px; margin-top: 2px;
+  font-size: 11.5px; font-variant-numeric: tabular-nums;
+}
+.up-eff svg.icon { width: 11px; height: 11px; stroke-width: 2; color: var(--ink-3); }
+.up-eff-k {
+  font-size: 9.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--blue);
+}
+.up-eff-l { color: var(--ink-2); font-weight: 500; }
+.up-eff-a { color: var(--ink-3); font-weight: 600; }
+.up-eff-arw { color: var(--ink-3); }
+.up-eff-b { color: var(--ink); font-weight: 700; }
+.up-eff-n {
+  font-size: 10px; font-weight: 600; color: var(--ink-2);
+  background: var(--wash);
+  padding: 1.5px 6px; border-radius: 2px;
+}
+.up-eff.then { margin-top: 5px; opacity: 0.42; }
+.up-eff.then .up-eff-k { color: var(--ink-2); }
+.up-eff.quiet { color: var(--ink-2); }
+
+/* ── Progress view ───────────────────────────────────────────────────────── */
+
+.pg-top { display: flex; align-items: center; gap: 16px; padding: 6px 6px 14px; }
+.pg-ringwrap { position: relative; flex: none; width: 86px; height: 86px; }
+.pg-ring { width: 100%; height: 100%; transform: rotate(-90deg); }
+.pg-ring circle { fill: none; stroke-width: 7; stroke-linecap: round; }
+.pg-ring-bg { stroke: var(--wash-2); }
+.pg-ring-fg { stroke: var(--blue); transition: stroke-dashoffset var(--t-page) var(--e-settle), stroke var(--t-card) var(--e-press); }
+.pg-ringwrap.full .pg-ring-fg { stroke: var(--gold); }
+.pg-pct { position: absolute; inset: 0; display: grid; place-items: center; }
+.pg-pct span {
+  display: flex; align-items: baseline;
+  font-size: 23px; font-weight: 800; letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+.pg-pct i { font-style: normal; font-size: 12px; font-weight: 700; color: var(--ink-3); margin-left: 1px; }
+
+.pg-legs { flex: 1; min-width: 0; }
+.pg-cap {
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--ink-3); margin-bottom: 7px;
+}
+.pg-leg { display: grid; grid-template-columns: 58px 1fr auto; align-items: center; gap: 8px; padding: 3px 0; }
+.pg-leg-n { font-size: 11.5px; font-weight: 600; color: var(--ink-2); }
+.pg-bar { height: 5px; border-radius: 1px; background: var(--wash-2); overflow: hidden; }
+.pg-bar i { display: block; height: 100%; border-radius: 1px; background: var(--blue); transition: width var(--t-page) var(--e-settle); }
+.pg-leg b { font-size: 11px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
+
+.tl { list-style: none; padding: 4px 2px 6px; }
+.tl-item { position: relative; display: flex; gap: 12px; padding: 0 0 14px 0; }
+.tl-item::before {
+  content: ''; position: absolute; left: 11px; top: 24px; bottom: 0;
+  width: 1.5px; background: var(--hairline);
+}
+.tl-item:last-child::before { display: none; }
+.tl-item.done::before { background: var(--tick-wash); }
+.tl-node {
+  position: relative; z-index: 1; flex: none;
+  width: 23px; height: 23px; border-radius: 999px;
+  display: grid; place-items: center;
+  background: var(--wash-2);
+  color: var(--ink-3);
+  transition: background var(--t-card) var(--e-press), color var(--t-card) var(--e-press),
+              box-shadow var(--t-card) var(--e-press);
+}
+.tl-node svg.icon { width: 12px; height: 12px; stroke-width: 2.4; }
+.tl-item.done .tl-node { background: var(--tick-wash); color: var(--tick); }
+.tl-item.now .tl-node {
+  background: var(--blue);
+  box-shadow: 0 0 0 4px var(--pen);
+}
+.tl-item.now .tl-node::after {
+  content: ''; width: 7px; height: 7px; border-radius: 999px; background: var(--pg);
+}
+.tl-body { flex: 1; min-width: 0; padding-top: 1px; }
+.tl-kicker {
+  font-size: 9.5px; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--blue); margin-bottom: 1px;
+}
+.tl-kicker.next { color: var(--ink-3); }
+.tl-title {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+  font-size: 13.5px; font-weight: 600; letter-spacing: -0.01em;
+}
+.tl-item.done .tl-title { color: var(--ink-2); font-weight: 500; }
+.tl-item:not(.done):not(.now) .tl-title { color: var(--ink-2); }
+.tl-reward { flex: none; font-size: 11.5px; font-weight: 700; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.tl-item.done .tl-reward { color: var(--tick); }
+.tl-item.now .tl-reward { color: var(--tick); }
+.tl-sub { font-size: 11.5px; color: var(--ink-2); line-height: 1.4; margin: 3px 0 5px; }
+.tl-item.now .ms-row { padding: 4px 0; }
+.tl-item.now .ms-icon { width: 24px; height: 24px; border-radius: 2px; }
+.tl-item.now .ms-icon svg.icon { width: 13px; height: 13px; }
+.tl-item.now .ms-label { font-size: 12px; }
+
+/* ── Course view ─────────────────────────────────────────────────────────── */
+
+.cv-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 4px 2px 12px; }
+.cv-tile {
+  padding: 11px 10px 9px;
+  border-radius: 3px;
+  background: var(--wash);
+  text-align: center;
+}
+.cv-tile b {
+  display: block;
+  font-size: 19px; font-weight: 800; letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+.cv-tile span { display: block; font-size: 10px; font-weight: 600; color: var(--ink-2); margin-top: 2px; }
+/* "22 / 36" — the denominator is context, not a second number to read */
+.cv-tile b s { text-decoration: none; color: var(--ink-3); font-weight: 600; margin: 0 1px; }
+
+.cv-block { padding: 12px 2px 14px; border-top: 0.5px solid var(--rule); }
+.cv-h {
+  display: flex; align-items: baseline; justify-content: space-between;
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--ink-3);
+  margin-bottom: 10px;
+}
+.cv-hr { letter-spacing: 0; text-transform: none; font-size: 11.5px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.cv-hi { display: flex; align-items: center; gap: 6px; }
+.cv-hi svg.icon { width: 13px; height: 13px; stroke-width: 1.9; }
+
+/* ── Course theme ────────────────────────────────────────────────────────── */
+
+.th-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; }
+.th {
+  padding: 7px 5px 6px;
+  border-radius: 3px;
+  background: var(--wash);
+  border: 1.5px solid transparent;
+  transition: background var(--t-chit) var(--e-press), border-color var(--t-chit) var(--e-press), transform var(--t-tick) var(--e-press);
+}
+.th:hover { background: var(--wash-2); }
+.th:active { transform: scale(0.96); }
+.th.on { border-color: var(--blue); background: var(--pen-0); }
+.th-swatch {
+  display: flex; gap: 2px; height: 20px;
+  border-radius: 2px; overflow: hidden;
+}
+.th-swatch i { display: block; flex: 1; }
+.th-name {
+  display: block; margin-top: 6px;
+  font-size: 10.5px; font-weight: 600; color: var(--ink-2);
+  letter-spacing: -0.01em;
+}
+.th.on .th-name { color: var(--blue); }
+.cv-empty { font-size: 12px; color: var(--ink-2); line-height: 1.45; padding: 2px 0 2px; }
+.cv-note { font-size: 11px; color: var(--ink-3); margin-top: 9px; font-variant-numeric: tabular-nums; }
+.cv-note.ok { color: var(--tick); font-weight: 600; }
+.cv-note.warn { color: var(--amber); font-weight: 600; }
+.cv-bars { gap: 10px; margin: 0; }
+.cv-bars .hc-track { height: 62px; }
+
+.cv-parbar { display: flex; gap: 3px; height: 9px; }
+.cv-parbar i { display: block; border-radius: 3px; }
+.cv-legend { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 9px; }
+.cv-legend span {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 11.5px; font-weight: 600; color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.cv-legend i { width: 7px; height: 7px; border-radius: 2px; }
+
+.cv-hole {
+  display: flex; align-items: center; gap: 9px; width: 100%;
+  padding: 7px 8px; margin: 0 -8px; border-radius: 3px;
+  text-align: left;
+  transition: background var(--t-chit) var(--e-press), transform var(--t-tick) var(--e-press);
+}
+.cv-hole:hover { background: var(--wash-2); }
+.cv-hole:active { transform: scale(0.985); }
+.cv-hnum {
+  flex: none; width: 24px; height: 24px;
+  display: grid; place-items: center; border-radius: 2px;
+  background: var(--pen); color: var(--blue);
+  font-size: 12px; font-weight: 800; font-variant-numeric: tabular-nums;
+}
+.cv-htag { flex: none; font-size: 12px; font-weight: 600; }
+.cv-hbody {
+  flex: 1; min-width: 0;
+  display: flex; align-items: center; gap: 5px;
+  font-size: 11.5px; color: var(--ink-2); font-variant-numeric: tabular-nums;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.cv-est {
+  font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--ink-3); background: var(--wash);
+  padding: 1px 5px; border-radius: 2px;
+}
+.cv-hole svg.icon, .cv-link svg.icon { width: 14px; height: 14px; color: var(--ink-3); flex: none; }
+
+.cv-link {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  padding: 12px 10px; margin: 4px 0 6px;
+  border-radius: 3px;
+  background: var(--wash);
+  font-size: 13px; font-weight: 600;
+  transition: background var(--t-chit) var(--e-press), transform var(--t-tick) var(--e-press);
+}
+.cv-link:hover { background: var(--wash-2); }
+.cv-link:active { transform: scale(0.985); }
+.cv-link span { flex: 1; text-align: left; }
+.cv-link b { color: var(--gold); font-weight: 800; font-variant-numeric: tabular-nums; }
+
+/* ── Today — the pro shop's book ─────────────────────────────────────────── */
+
+.ts-head { padding: 2px 2px 12px; }
+.ts-date {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 17px; font-weight: 700; letter-spacing: -0.015em;
+}
+.ts-wk {
+  font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--blue); background: var(--pen);
+  padding: 2px 7px; border-radius: 2px;
+}
+.ts-hours {
+  font-size: 12px; color: var(--ink-2); margin-top: 3px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The notice is only ever printed inside the book, where `.bk-flow .ts-closed`
+   already gives it its ground. The blue diagonal that used to be declared here
+   was dead paint — outranked at every moment of its life — and it was the last
+   software gradient in the stylesheet. */
+.ts-closed {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 12px 14px; margin-bottom: 12px;
+  border-radius: 3px;
+  background: var(--wash);
+  box-shadow: inset 0 0 0 1px var(--hairline);
+}
+.ts-closed b { font-size: 13px; font-weight: 700; }
+.ts-closed span { font-size: 11.5px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+
+/* ── The day, as a time axis ───────────────────────────────────────────────
+   A scale, not a set of buttons. Left edge is the first tee time, right edge
+   is the last, and every minute in between is worth the same number of pixels
+   — so the quiet hours are the widest thing here and the rush is a knot, which
+   is the fact this whole view exists to show. Each tee time stands on the
+   baseline as one mark, as tall as the group is big. The hours are printed
+   underneath so a time can be read straight off the picture. */
+
+.ts-day { margin: 3px 0 9px; }
+.ts-axis {
+  position: relative; height: 26px; cursor: pointer;
+  /* the rule the day is drawn on — one hairline, printed, not embossed. It is
+     the page's own rule now: the cool iOS separator grey it used to be drawn in
+     was the last system colour on the spread, and next to a warm cream sheet a
+     cool grey reads as a seam rather than a printed line. */
+  border-bottom: 1px solid var(--rule);
+}
+/* A wave is a stretch of the clock, so it is drawn as one: real left, real
+   width, no minimum. It is the faint ground under the marks and the handle
+   that takes the book to that hour — and nothing else, because the marks
+   standing on it already say how full it is, with times, better than a wash
+   behind a label ever did. */
+.ts-part {
+  position: absolute; top: 0; bottom: 0;
+  border-radius: 2px 2px 0 0;
+  background: var(--pen-0);
+  transition: background var(--t-chit) var(--e-press);
+}
+.ts-part.quiet { background: var(--wash-0); }
+.ts-part.on { background: var(--pen); }
+.ts-part.quiet.on { background: var(--wash-2); }
+.ts-part:hover, .ts-part.hot { background: var(--pen-2); }
+.ts-part.quiet:hover, .ts-part.quiet.hot { background: var(--wash-3); }
+.ts-part:focus-visible { outline: 2px solid var(--blue); outline-offset: 1px; }
+
+/* One tee time. Height is the party size (--h), colour is what has become of
+   it: blue while it is a booking that still has golf in it, grey once the card
+   is signed, and a low stub while the time is going begging. Solid marks on a
+   near-white bed — the sold/unsold reading is carried by both height and
+   value, so it survives a squint at any size of block. */
+.ts-t {
+  /* 1.8px, not 2: inside a wave the times are eight minutes apart, which at
+     real scale is a 2.6px pitch — so the mark has to leave a hair of daylight
+     or a busy wave stops being twelve bookings and becomes one blue smear. */
+  position: absolute; bottom: 0; width: 1.8px;
+  transform: translateX(-0.9px);
+  border-radius: 1px 1px 0 0;
+  pointer-events: none;
+}
+/* Contrast, measured rather than eyeballed — the last strip's wash failed at
+   1.70 against its own fill. Composited over the sheet's ground these read
+   4.2:1 (sold) and 3.5:1 (played), both clear of the 3:1 a non-text indicator
+   needs. `open` is deliberately quiet: it is the negative space, and it is
+   already told apart from a booking by being a fifth of the height. */
+/* Measured after the change of pigment: a played mark reads 4.9:1 on the sheet
+   (was 4.6 in cool grey) and an open stub 2.6:1 — deliberately quiet, and told
+   apart from a booking by being a fifth of the height as well as by value. */
+.ts-t.open { height: 5px; background: rgba(62, 46, 20, 0.32); }
+.ts-t.sold { height: var(--h, 60%); background: var(--blue-press); }
+.ts-t.in { height: var(--h, 60%); background: rgba(62, 46, 20, 0.62); }
+
+/* Where the day has actually got to: one hairline, with the same NOW pill the
+   book uses below. The pill is opaque and carries its own margin of page, so
+   it simply covers whichever hour it lands on rather than colliding with it. */
+.ts-mark {
+  position: absolute; top: -2px; bottom: -1px; width: 1.5px;
+  transform: translateX(-0.75px);
+  background: var(--red);
+  pointer-events: none;
+  /* no transition on `left`: the view is rebuilt from innerHTML every render,
+     so the marker is a new element each time and a transition here could never
+     fire. Dead motion is worse than no motion. */
+}
+.ts-mark::before {
+  content: ''; position: absolute; top: 0; left: -1.25px;
+  width: 4px; height: 4px; border-radius: 50%; background: var(--red);
+}
+.ts-rule {
+  position: relative; height: 13px; margin-top: 4px;
+  font-variant-numeric: tabular-nums;
+}
+/* the hour marks carry the whole strip — "the afternoon goes out at four" is
+   read off these. They were the one thing on the page that failed a squint. */
+.ts-rule span {
+  position: absolute; top: 0; transform: translateX(-50%);
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.01em;
+  color: var(--ink-2); white-space: nowrap;
+}
+.ts-mark-lab {
+  position: absolute; top: -1px; transform: translateX(-50%);
+  font-size: 9px; font-weight: 800; letter-spacing: 0.02em; text-transform: uppercase;
+  color: var(--pg); background: var(--red);
+  padding: 1.5px 4.5px; border-radius: 2px; white-space: nowrap;
+  box-shadow: 0 0 0 2.5px var(--pg);
+}
+.ts-mark-lab.a { transform: translateX(-6px); }
+.ts-mark-lab.z { transform: translateX(calc(-100% + 6px)); }
+.ts-say {
+  font-size: 12px; color: var(--ink-2); line-height: 1.45;
+  padding: 0 2px 10px;
+  font-variant-numeric: tabular-nums;
+}
+.ts-say b { color: var(--ink); font-weight: 700; }
+.ts-say u {
+  text-decoration: none; color: var(--ink);
+  font-weight: 800; font-variant-numeric: tabular-nums;
+}
+
+/* The axis has no motion of its own to reduce — it is a printed scale, and the
+   only thing that moves on it is the hover wash under the pointer. */
+@media (prefers-reduced-motion: reduce) {
+  .ts-part { transition: none; }
+  /* Entrance animations all start from opacity 0 or an offset; switching them
+     off lands every one of them on its finished state, which is exactly the
+     still version of the same page. The two infinite ones — .fc-live and
+     .link-line — are stopped ONCE, in the policy block at the top of this
+     file, and were being stopped a second time here for no benefit. */
+  #milestone, #away, #toast, #link-label, #link-chip, #route-chip,
+  .modal, .st-detail, .aw-hnote, .pair-mark,
+  .bk-flow .up-lvl.wrote, .up-pip.fill,
+  .pill.shake, .pill.money.tickup { animation: none; }
+}
+.ts-drivers { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.ts-drivers span {
+  font-size: 11px; font-weight: 600; color: var(--ink-2);
+  background: var(--wash);
+  padding: 3px 8px; border-radius: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+.ts-book { padding-bottom: 6px; }
+/* a scroll target with no height of its own, so the sticky heading above each
+   wave never reports its own stuck position as the wave's place in the book */
+.ts-anchor { display: block; height: 0; }
+/* the book's rows are headed by the day's five parts, not by the hour — the
+   heading carries the wave's window and how much of it went */
+.ts-hour {
+  display: flex; align-items: baseline; gap: 8px;
+  padding: 12px 2px 5px;
+  font-size: 11px; font-weight: 700; color: var(--ink-3);
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+.ts-hour span {
+  margin-left: auto;
+  text-transform: none; letter-spacing: 0; font-weight: 600;
+  font-size: 11px; color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+/* A pro shop's sheet is RULED. There is no rounded row here and never was one
+   on screen — the 9px capsule and the 8px bleed this rule used to carry were
+   both outranked by the printed version in the `.bk-flow` block, which is the
+   only place a tee sheet has ever been drawn. One set of numbers now, at the
+   object itself, so what you read is what renders. */
+.ts-slot {
+  display: flex; align-items: center; gap: 10px;
+  padding: 4px 6px; margin: 0;
+  border-radius: 0;
+  border-bottom: 1px solid rgba(62, 46, 20, 0.11);
+  font-size: 12.5px;
+}
+.ts-slot.open { padding: 3px 6px; }
+.ts-time {
+  flex: none; width: 46px;
+  border-right: 1px solid rgba(62, 46, 20, 0.13); margin-right: 2px;
+  /* the time is the first thing anybody reads off a tee sheet — quiet tier,
+     but it is primary data and has to hold its own at 11.5px */
+  font-size: 11.5px; font-weight: 600; color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.ts-who {
+  flex: 1; min-width: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-weight: 600;
+}
+.ts-who i {
+  font-style: normal; font-weight: 600; color: var(--ink-3); margin-left: 5px;
+}
+.ts-slot.open .ts-who { font-weight: 500; color: var(--ink-3); font-size: 11.5px; }
+.ts-slot.done { opacity: 0.5; }
+.ts-slot.out {
+  background: var(--pen-0);
+  box-shadow: inset 2px 0 0 var(--blue);
+}
+.ts-tag {
+  flex: none;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.02em;
+  padding: 2px 7px; border-radius: 2px;
+  color: var(--ink-2); background: var(--wash);
+  font-variant-numeric: tabular-nums;
+}
+.ts-tag.out { color: var(--blue); background: var(--pen); }
+.ts-tag.wait { color: var(--amber); background: var(--amber-wash); }
+
+.ts-now {
+  display: flex; align-items: center; gap: 8px;
+  margin: 7px -8px 6px 34px;
+  height: 1px;
+  /* the red pencil running out across the page — the club's own red thinned,
+     not the system red it used to fade into */
+  background: linear-gradient(90deg, var(--red), rgba(168, 50, 31, 0.15));
+}
+.ts-now span {
+  margin-left: -34px;
+  font-size: 9.5px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--pg); background: var(--red);
+  padding: 2px 6px; border-radius: 2px;
+  white-space: nowrap;
+}
+.ts-now.done { background: none; height: auto; margin-left: 0; }
+.ts-now.done span { margin-left: 0; color: var(--ink-3); background: var(--wash-2); }
+
+/* ── Notables ────────────────────────────────────────────────────────────────
+   A great player in the diary gets a stripe of their own colour and nothing
+   else. The restraint IS the prestige. */
+
+.ts-slot.vip { box-shadow: inset 2px 0 0 var(--vc, var(--gold)); background: var(--paper); }
+.ts-slot.vip.out { background: var(--pen-0); }
+.ts-slot.vip .ts-who { letter-spacing: -0.01em; }
+.ts-vip {
+  flex: none;
+  font-size: 9.5px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase;
+  padding: 2px 6px; border-radius: 2px;
+  color: var(--ink-gilt); background: var(--gilt-wash);
+}
+.ts-vip.mem { color: var(--tick); background: var(--tick-wash); }
+
+/* a notable in tomorrow's diary — gilt ground, gilt keyline, and the same wash
+   on approach that every other gilt object in the book uses */
+.ts-vipnext {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  margin: 2px 0 10px; padding: 10px 12px;
+  border-radius: 3px; text-align: left;
+  background: var(--paper); box-shadow: inset 0 0 0 1px var(--gilt);
+  transition: transform var(--t-tick) var(--e-press), background var(--t-chit) var(--e-press);
+}
+.ts-vipnext:hover { background: var(--gilt-wash); }
+.ts-vipnext:active { transform: scale(0.98); }
+.ts-vipnext i { flex: none; width: 9px; height: 26px; border-radius: 1px; }
+.ts-vipnext div { flex: 1; min-width: 0; }
+.ts-vipnext b { display: block; font-size: 13px; font-weight: 700; letter-spacing: -0.015em; }
+.ts-vipnext span { display: block; font-size: 11px; color: var(--ink-2); margin-top: 1px; }
+.ts-vipnext u {
+  flex: none; text-decoration: none;
+  font-size: 13px; font-weight: 700; color: var(--ink-gilt); font-variant-numeric: tabular-nums;
+}
+
+/* ── The Club Book ───────────────────────────────────────────────────────── */
+/* A guest ledger reinterpreted, not reproduced: warm paper under the honours
+   and the collection, hairline rules instead of borders, and the club's serif
+   numerals kept for the seven numbers that are genuinely engraved. Everything
+   else stays in the system sans, which is what keeps it Apple rather than
+   antique. Two tokens carry the whole warmth so a theme change never fights it. */
+
+/* The book's gilt is a brighter, greener gold than the fittings' — it is leaf on
+   paper, not paint on board. FOUR tokens carry it, not three: --gilt-wash was
+   left behind on the :root hue, so every ground that used it (a rank chip, the
+   hover under a notable's line) shifted from 212,160,23 to 138,98,23 the moment
+   you pointed at it. One hue in, one hue out. */
+.cv-view {
+  --paper: rgba(212, 160, 23, 0.055);
+  --gilt-wash: rgba(212, 160, 23, 0.17);
+  --gilt: rgba(212, 160, 23, 0.26);
+  --ink-gilt: #8a6200;
+}
+body.night .cv-view {
+  --paper: rgba(212, 160, 23, 0.10);
+  --gilt-wash: rgba(212, 160, 23, 0.22);
+  --gilt: rgba(212, 160, 23, 0.34);
+}
+
+/* the club's reach, said once, in a sentence */
+.bk-reach {
+  font-size: 11.5px; line-height: 1.45; color: var(--ink-2);
+  padding: 0 2px 12px;
+}
+.bk-reach b { color: var(--ink); font-weight: 700; }
+
+/* ── Honours ─────────────────────────────────────────────────────────────── */
+
+.hb {
+  border-radius: 3px; background: var(--paper);
+  display: grid; grid-template-columns: 1fr 1fr;
+  overflow: hidden;
+}
+/* the grid's rules are drawn as insets, so they never double up at a join:
+   every cell carries its own top rule, and the right-hand column of each pair
+   (children 3, 5, 7 — the odd ones after the wide headline) carries the gutter */
+.hb-cell { padding: 11px 12px 12px; min-width: 0; box-shadow: inset 0 0.5px 0 var(--gilt); }
+.hb-cell:nth-child(odd) { box-shadow: inset 0 0.5px 0 var(--gilt), inset 0.5px 0 0 var(--gilt); }
+.hb-cell.wide { grid-column: 1 / -1; box-shadow: none; }
+.hb-l {
+  font-size: 9.5px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--ink-gilt); opacity: 0.85;
+}
+/* the one place in the game with serif numerals — the engraved ones */
+.hb-v {
+  margin-top: 3px;
+  font-family: ui-serif, "New York", "Iowan Old Style", Georgia, serif;
+  font-size: 25px; font-weight: 600; letter-spacing: -0.015em; line-height: 1.05;
+  color: var(--ink); font-variant-numeric: tabular-nums lining-nums;
+}
+.hb-cell.wide .hb-v { font-size: 34px; }
+.hb-v em {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  font-style: normal; font-size: 11px; font-weight: 650; color: var(--ink-2);
+  margin-left: 5px; letter-spacing: 0;
+}
+.hb-cell.tally .hb-v { color: var(--ink-gilt); }
+.hb-m {
+  margin-top: 4px; font-size: 10.5px; font-weight: 550; line-height: 1.35;
+  color: var(--ink-2);
+}
+.hb-cell.empty .hb-v { color: var(--ink-3); opacity: 0.5; font-weight: 400; }
+.hb-cell.empty .hb-m { color: var(--ink-3); font-weight: 500; }
+
+/* ── The long game: the standing, the honours page, the annals ────────────
+   All three are book passages, so everything is cut from the paper tokens:
+   pencil for the not-yet, ink for the done, gilt for a date, the fountain
+   pen for the year still being written. Night re-tones through the same
+   tokens the rest of the page reads. */
+
+/* the cover's standing line — recognition tooled under the title, only once
+   the club has any. :empty keeps a bare field's cover exactly as it was. */
+.bk-cstand {
+  font-size: 10px; letter-spacing: 0.34em; text-transform: uppercase;
+  opacity: 0.68; margin-top: 2px; text-align: center;
+}
+.bk-cstand:empty { display: none; }
+
+/* the standing — the committee's first page */
+.bk-flow .sd-now {
+  font-family: var(--serif); font-size: 21px; font-weight: 600;
+  color: var(--ink); letter-spacing: 0.01em; margin: 1px 0 9px;
+}
+.sd-row {
+  display: flex; align-items: baseline; gap: 8px;
+  padding: 4.5px 2px; border-bottom: 0.5px solid var(--hairline);
+  font-size: 12.5px;
+}
+.sd-row:last-of-type { border-bottom: 0; }
+.sd-mk { flex: none; align-self: center; color: var(--ink-gilt); }
+.sd-mk svg.icon { width: 12px; height: 12px; stroke-width: 2; }
+.sd-n { font-family: var(--serif); font-weight: 600; color: var(--ink); min-width: 0; }
+.sd-row.next .sd-mk { color: var(--pencil); }
+.sd-row.faroff .sd-n { color: var(--pencil); font-weight: 500; }
+.sd-row.faroff .sd-mk { color: var(--pencil); opacity: 0.55; }
+.sd-row.faroff .sd-mk svg.icon, .sd-row.next .sd-mk svg.icon { stroke-width: 1.5; }
+.sd-d {
+  margin-left: auto; font-style: normal; font-size: 10.5px;
+  color: var(--ink-gilt); font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.sd-req {
+  margin-left: auto; font-style: normal;
+  display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end;
+}
+.sd-c {
+  font-size: 10px; font-weight: 600; color: var(--pencil);
+  background: var(--wash-0); border: 0.5px solid var(--hairline); border-radius: 2px;
+  padding: 1.5px 5px; white-space: nowrap; font-variant-numeric: tabular-nums;
+}
+.sd-c.ok { color: var(--tick); background: var(--tick-wash); border-color: transparent; }
+/* the horizon — the committee's one sentence, set off like a minute in the margin */
+.sd-horizon {
+  margin-top: 10px; padding-left: 9px; border-left: 2px solid var(--gilt);
+  font-family: var(--serif); font-size: 12.5px; line-height: 1.5; color: var(--ink-2);
+}
+.sd-horizon b { color: var(--ink); font-weight: 600; }
+
+/* the honours page — pencil until done; ink, with the date, for good */
+.hn { display: flex; gap: 8px; padding: 5px 2px; border-bottom: 0.5px solid var(--hairline); }
+.hn:last-of-type { border-bottom: 0; }
+.hn-mk { flex: none; margin-top: 2px; color: var(--tick); }
+.hn-mk svg.icon { width: 13px; height: 13px; stroke-width: 2; }
+.hn.pencil .hn-mk { color: var(--pencil); opacity: 0.6; }
+.hn.pencil .hn-mk svg.icon { stroke-width: 1.5; }
+.hn-body { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.hn-body b {
+  font-family: var(--serif); font-size: 12.5px; font-weight: 600;
+  color: var(--ink); letter-spacing: 0.01em;
+}
+.hn-body span { font-size: 10.5px; color: var(--ink-3); line-height: 1.4; }
+.hn.pencil .hn-body b { color: var(--pencil); }
+.hn.ink .hn-body span { color: var(--ink-gilt); font-variant-numeric: tabular-nums; }
+
+/* the annals — one entry per year, frozen at New Year */
+.an-y { padding: 8px 2px 9px; border-bottom: 0.5px solid var(--hairline); }
+.an-y:last-of-type { border-bottom: 0; }
+.an-head { display: flex; align-items: baseline; gap: 9px; }
+.an-head b {
+  font-family: var(--serif); font-size: 17px; font-weight: 600;
+  color: var(--ink); font-variant-numeric: tabular-nums;
+}
+.an-head span { font-size: 11px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+/* the open year is still under the fountain pen */
+.an-y.now .an-head b { color: var(--blue); }
+.an-y.now .an-head span { font-style: italic; color: var(--ink-3); }
+.an-f { font-size: 11px; color: var(--ink-2); line-height: 1.45; margin-top: 3px; }
+.an-line {
+  font-family: var(--serif); font-style: italic; font-size: 12px;
+  color: var(--ink-2); line-height: 1.5; margin-top: 5px;
+}
+
+/* nothing may split across a page in the middle of itself */
+.bk-flow .sd-row, .bk-flow .hn, .bk-flow .an-head, .bk-flow .sd-horizon,
+.bk-flow .an-line, .bk-flow .sd-now { break-inside: avoid; }
+
+/* ── A signature in the visitors' book ───────────────────────────────────── */
+
+.sig-head {
+  width: 100%; display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 12px 11px; border-radius: 3px; text-align: left;
+  transition: background var(--t-chit) var(--e-press), transform var(--t-tick) var(--e-press);
+}
+.st-row.sig:not(.on) .sig-head:hover { background: var(--wash-2); }
+.sig-head:active { transform: scale(0.99); }
+.st-row.sig .st-dot { height: 34px; margin-top: 1px; }
+.sig-body { flex: 1; min-width: 0; display: block; }
+.sig-top { display: flex; align-items: baseline; gap: 7px; }
+.sig-top > b {
+  flex: none; font-size: 13px; font-weight: 650; letter-spacing: -0.015em; color: var(--ink);
+}
+.sig-top em {
+  flex: 1; min-width: 0; font-style: normal; font-size: 9.5px; font-weight: 700;
+  letter-spacing: 0.02em; color: var(--ink-3); white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
+}
+.sig-line {
+  display: block; margin-top: 3px;
+  font-size: 11.5px; line-height: 1.42; color: var(--ink-2);
+  font-style: italic;
+  overflow: hidden; text-overflow: ellipsis; display: -webkit-box;
+  -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+}
+.sig-foot {
+  display: block; margin-top: 4px;
+  font-size: 10px; font-weight: 600; color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── The collection ──────────────────────────────────────────────────────── */
+
+.col-count {
+  font-size: 11px; font-weight: 600; color: var(--ink-2);
+  font-variant-numeric: tabular-nums; padding: 0 2px 10px;
+}
+.col-tier {
+  display: flex; align-items: baseline; gap: 8px;
+  padding: 9px 2px 6px; margin-top: 2px;
+  box-shadow: inset 0 0.5px 0 var(--hairline);
+}
+.col-tier b {
+  flex: none; font-size: 10px; font-weight: 700; letter-spacing: 0.03em;
+  text-transform: uppercase; color: var(--ink-3);
+}
+.col-tier span { flex: 1; font-size: 10px; font-weight: 600; color: var(--ink-3); }
+.col-tier em {
+  flex: none; font-style: normal; font-size: 10px; font-weight: 700;
+  color: var(--ink-3); font-variant-numeric: tabular-nums;
+}
+.col-tier.open b, .col-tier.open span { color: var(--ink-gilt); }
+.col-tier.open em { color: var(--ink-gilt); }
+
+.col-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+.col-t {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 3px;
+  padding: 8px 9px 9px; border-radius: 3px; text-align: left; min-width: 0;
+  /* every tile is the same size whether or not there is a name on it, so the
+     grid stays a grid and a discovery never nudges the row it lands in */
+  min-height: 64px;
+  background: var(--wash);
+  transition: background var(--t-chit) var(--e-press), transform var(--t-tick) var(--e-press);
+}
+button.col-t:hover { background: var(--wash-2); }
+button.col-t:active { transform: scale(0.96); }
+.col-t.on { background: var(--pen); }
+.col-t.member { background: var(--paper); box-shadow: inset 0 0 0 0.5px var(--gilt); }
+.col-dot { width: 16px; height: 5px; border-radius: 1px; flex: none; }
+.col-n {
+  display: block; width: 100%; min-width: 0;
+  font-size: 9.5px; font-weight: 550; color: var(--ink-2); line-height: 1.25;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.col-n b {
+  display: block; font-size: 11px; font-weight: 650; color: var(--ink);
+  letter-spacing: -0.015em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.col-m {
+  font-size: 9.5px; font-weight: 700; font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+.col-m.good { color: var(--tick); }
+.col-m.ok { color: var(--blue); }
+.col-m.meh { color: var(--amber); }
+.col-m.bad { color: var(--red); }
+.col-m.quiet { color: var(--ink-3); font-weight: 600; letter-spacing: 0; }
+
+/* not a locked box — an unwritten line in the ledger, waiting for a name */
+.col-t.unmet { background: var(--wash-0); justify-content: center; }
+.col-t.unmet .col-dot { background: var(--wash-3); }
+.col-t.unmet .col-rule {
+  display: block; height: 4px; border-radius: 1px; margin-top: 3px;
+  width: 82%; background: var(--wash-3);
+}
+.col-t.unmet .col-rule.short { width: 52%; margin-top: 5px; margin-bottom: 3px; }
+
+.col-card { margin-top: 8px; padding-top: 10px; }
+
+/* what this person has done HERE — the club's half of the card */
+.st-hist {
+  margin-top: 11px; padding: 7px 10px 8px; border-radius: 3px;
+  background: var(--paper); box-shadow: inset 0 0 0 0.5px var(--gilt);
+  font-size: 11px; font-weight: 600; color: var(--ink-gilt);
+  font-variant-numeric: tabular-nums; line-height: 1.4;
+}
+.st-hist.quiet {
+  background: var(--wash); box-shadow: none;
+  color: var(--ink-3); font-weight: 550;
+}
+
+.st-row { border-radius: 3px; transition: background var(--t-chit) var(--e-press); }
+.st-row.on { background: var(--wash); }
+.st-head {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 8px 10px; border-radius: 3px; text-align: left;
+  transition: background var(--t-chit) var(--e-press), transform var(--t-tick) var(--e-press);
+}
+.st-row:not(.on) .st-head:hover { background: var(--wash); }
+.st-head:active { transform: scale(0.99); }
+.st-dot { flex: none; width: 8px; height: 26px; border-radius: 1px; }
+.st-name { flex: 1; min-width: 0; font-size: 13px; font-weight: 650; letter-spacing: -0.015em; }
+/* rank as a chip, tour as the text that yields — so the line stops truncating
+   into "Local Standout · The Amat…" and the rank always survives */
+.st-name em {
+  display: flex; align-items: center; gap: 5px; min-width: 0; margin-top: 2px;
+  font-style: normal; font-size: 10.5px; font-weight: 550; color: var(--ink-3);
+}
+.st-name em b {
+  flex: none; font-size: 8.5px; font-weight: 800; letter-spacing: 0.03em;
+  text-transform: uppercase; color: var(--ink-2);
+  padding: 1.5px 5px; border-radius: 2px; background: var(--wash-2);
+}
+.st-name em i {
+  flex: 1; min-width: 0; font-style: normal;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.st-row.mem .st-name em b { color: var(--ink-gilt); background: var(--gilt-wash); }
+.st-when { flex: none; font-size: 11px; font-weight: 600; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.st-when.on { color: var(--tick); }
+.st-mark {
+  flex: none; min-width: 30px; text-align: right;
+  font-size: 15px; font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums;
+}
+.st-mark.good { color: var(--tick); }
+.st-mark.ok { color: var(--blue); }
+.st-mark.meh { color: var(--amber); }
+.st-mark.bad { color: var(--red); }
+.st-first {
+  flex: none; font-size: 10px; font-weight: 600; color: var(--ink-3);
+}
+.st-ready {
+  flex: none; font-size: 9.5px; font-weight: 800; letter-spacing: 0.03em; text-transform: uppercase;
+  padding: 2px 6px; border-radius: 2px; color: var(--tick); background: var(--tick-wash);
+}
+.st-chev {
+  flex: none; font-size: 16px; color: var(--ink-3); line-height: 1;
+  transition: transform var(--t-card) var(--e-settle);
+}
+.st-chev.on { transform: rotate(90deg); }
+
+.st-detail { padding: 0 12px 12px; animation: view-in var(--t-card) var(--e-settle); }
+.st-bio { font-size: 12px; line-height: 1.45; color: var(--ink-2); }
+.st-quote {
+  margin-top: 6px; padding-left: 9px;
+  border-left: 2px solid var(--gilt);
+  font-size: 12px; line-height: 1.4; color: var(--ink-2); font-style: italic;
+}
+.st-stats { margin-top: 11px; display: grid; gap: 5px; }
+.st-bar { display: flex; align-items: center; gap: 8px; }
+.st-bar > span { flex: none; width: 78px; font-size: 10.5px; font-weight: 600; color: var(--ink-2); }
+.st-t {
+  position: relative; flex: 1; height: 5px; border-radius: 1px;
+  background: var(--wash-3); overflow: hidden;
+}
+.st-t i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 1px; background: var(--ink-2); }
+.st-t u { position: absolute; top: 0; bottom: 0; border-radius: 1px; background: var(--green); }
+.st-bar > b {
+  flex: none; width: 42px; text-align: right;
+  font-size: 11.5px; font-weight: 700; font-variant-numeric: tabular-nums;
+}
+.st-bar > b em { font-style: normal; font-size: 9.5px; color: var(--tick); margin-left: 3px; }
+
+/* Their taste as a set of rules: a dot where they want the course to sit and a
+   tick where it actually does. The distance between them is the whole page. */
+.st-taste {
+  margin-top: 11px; padding: 8px 10px 9px; border-radius: 3px;
+  background: var(--wash);
+}
+.st-th {
+  display: flex; align-items: baseline; gap: 8px; margin-bottom: 7px;
+  font-size: 10.5px; font-weight: 700; color: var(--ink);
+}
+.st-th em {
+  flex: 1; text-align: right; font-style: normal;
+  font-size: 9.5px; font-weight: 600; color: var(--ink-3);
+}
+.st-ax { display: flex; align-items: center; gap: 9px; padding: 3px 0; }
+.st-ax > span {
+  flex: none; width: 84px; font-size: 10px; font-weight: 650; color: var(--ink-2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.st-axb { flex: 1; min-width: 0; }
+.st-axp { display: flex; justify-content: space-between; margin-top: 3px; }
+.st-axp em {
+  font-style: normal; font-size: 8.5px; font-weight: 600; color: var(--ink-3);
+  white-space: nowrap; line-height: 1;
+}
+.st-axt {
+  position: relative; height: 3px; border-radius: 1px;
+  background: var(--wash-3);
+}
+.st-axt i {
+  position: absolute; top: 50%; width: 9px; height: 9px; border-radius: 999px;
+  margin: -4.5px 0 0 -4.5px; box-shadow: 0 0 0 1.5px var(--pg);
+}
+.st-axt u {
+  position: absolute; top: -3.5px; bottom: -3.5px; width: 2px; margin-left: -1px;
+  border-radius: 999px; background: var(--ink); opacity: 0.55;
+}
+
+/* the rank spelled out, for the player meeting their first Tour Winner */
+.st-tier {
+  display: flex; align-items: baseline; gap: 7px; margin-bottom: 7px;
+  font-size: 10.5px; font-weight: 600; color: var(--ink-3);
+}
+.st-tier b {
+  flex: none; font-size: 9px; font-weight: 800; letter-spacing: 0.04em;
+  text-transform: uppercase; color: var(--ink-gilt);
+  padding: 2px 6px; border-radius: 2px; background: var(--gilt-wash);
+}
+
+.st-verdict { margin-top: 11px; }
+.st-vh { display: flex; align-items: baseline; gap: 9px; }
+.st-vh b { font-size: 24px; font-weight: 800; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+.st-vh b.good { color: var(--tick); }
+.st-vh b.ok { color: var(--blue); }
+.st-vh b.meh { color: var(--amber); }
+.st-vh b.bad { color: var(--red); }
+.st-vh span { flex: 1; font-size: 11.5px; font-weight: 600; color: var(--ink-2); line-height: 1.35; }
+.st-reasons { list-style: none; margin-top: 8px; display: grid; gap: 5px; }
+.st-reasons li {
+  position: relative; padding-left: 16px;
+  font-size: 11.5px; line-height: 1.42; color: var(--ink-2);
+}
+.st-reasons li::before {
+  position: absolute; left: 1px; top: 0;
+  font-size: 13px; font-weight: 700; line-height: 1.42;
+}
+.st-reasons li.ok::before { content: '+'; color: var(--tick); }
+.st-reasons li.bad::before { content: '\2212'; color: var(--red); }
+.st-fav {
+  margin-top: 8px; font-size: 11px; font-weight: 600; color: var(--ink-gilt);
+}
+.st-fav i { font-style: normal; font-weight: 500; color: var(--ink-3); }
+
+/* a standing arrangement, not small print under a destructive button */
+.st-mem {
+  margin-top: 12px; display: flex; align-items: center; gap: 10px;
+  padding: 8px 4px 8px 10px; border-radius: 3px;
+  background: var(--paper);
+}
+.st-memf { flex: 1; min-width: 0; }
+.st-memf b {
+  display: block; font-size: 11.5px; font-weight: 700; color: var(--ink-gilt);
+  letter-spacing: -0.01em;
+}
+.st-memf span {
+  display: block; margin-top: 1px; font-size: 11px; font-weight: 550;
+  line-height: 1.35; color: var(--ink-2);
+}
+
+.st-act { margin-top: 12px; display: flex; align-items: center; gap: 10px; }
+.st-act .btn-primary { flex: 1; justify-content: center; }
+.st-act span { flex: 1; font-size: 11px; line-height: 1.4; color: var(--ink-3); }
+.st-act.off { padding: 8px 10px; border-radius: 3px; background: var(--wash); }
+
+/* the top bar's tee-sheet field is a door into the book — declared with the
+   board itself, above, where the rest of its behaviour is */
+
+/* ── Modal (welcome back) ────────────────────────────────────────────────── */
+
+/* the same desk the Club Book is opened on: the room drops away and one warm
+   pool of light stays over the paper. There is no blur in it and none anywhere
+   else — assert on __fairway.ui().material.blurred to keep it that way. */
+.modal-wrap {
+  position: fixed; inset: 0; z-index: 60;
+  display: grid; place-items: center;
+  background:
+    radial-gradient(52% 56% at 50% 48%, rgba(255, 240, 205, 0.18) 0%, rgba(255, 240, 205, 0) 70%),
+    rgba(24, 22, 17, 0.44);
+}
+.modal {
+  width: 336px;
+  padding: 30px 30px 26px;
+  border-radius: 3px;
+  text-align: center;
+  animation: pop-in var(--t-page) var(--e-settle);
+}
+@keyframes pop-in { from { opacity: 0; transform: scale(0.9) translateY(10px); } }
+/* A club notice is headed the way every other one in this game is headed: a
+   small-caps line in gilt, over a rule. What was here was a 40px weather emoji
+   — the single largest thing on the card, drawn by the operating system, in a
+   style shared with nothing else on screen, saying nothing the sentence
+   underneath it did not already say better. */
+.modal-kick {
+  font-family: var(--serif);
+  font-size: 9px; font-weight: 600; letter-spacing: 0.17em;
+  text-transform: uppercase; color: var(--ink-gilt);
+  padding-bottom: 10px; margin-bottom: 14px;
+  border-bottom: 1px solid var(--rule);
+}
+.modal h2 { font-family: var(--serif); font-size: 22px; font-weight: 600; letter-spacing: 0.02em; }
+.modal p { font-size: 13px; color: var(--ink-2); margin-top: 7px; line-height: 1.48; }
+.modal-amount {
+  font-family: var(--serif); font-size: 34px; font-weight: 600; letter-spacing: 0.01em;
+  color: var(--ink-gilt); margin: 16px 0 20px;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+/* Two answers to a question that only one card ever asks. Stacked, not paired:
+   the safe one is the object — full width, joinery, the thing your hand goes
+   to — and the destructive one is a line of red pencil under it, the same
+   weight and colour as the "Start Over…" that opened the card. Nothing new is
+   introduced here; it is .btn-primary.big and .btn-plain, arranged. */
+.modal-acts { display: flex; flex-direction: column; align-items: center; gap: 4px; margin-top: 20px; }
+.modal-acts .btn-primary { width: 100%; }
+
+/* ── The yardage-book page ───────────────────────────────────────────────────
+   The card that opens on a tee or a pin is the page an architect keeps on that
+   hole: the number in a ruled box at the head, the hole's name and length under
+   it, how the field has actually scored it, and two written actions at the
+   foot. It is anchored in the world and follows the pin, so it stays LIGHTER
+   than the book — one sheet, not a bound spread — but it is cut from the same
+   stock and set in the same faces. */
+
+.fcard {
+  position: fixed; z-index: 44;
+  width: 254px;
+  padding: 13px 14px 11px;
+  border-radius: 3px;
+  opacity: 0; transform: translateY(5px);
+  transition: opacity var(--t-card) var(--e-press), transform var(--t-page) var(--e-settle);
+}
+.fcard.show { opacity: 1; transform: none; }
+
+.hc-head { display: flex; align-items: center; gap: 10px; }
+/* the hole number, ruled off the way it is printed on a real yardage book */
+.hc-num {
+  flex: none;
+  width: 32px; height: 32px;
+  display: grid; place-items: center;
+  border-radius: 2px;
+  background: var(--paper);
+  box-shadow: inset 0 0 0 1px var(--gilt);
+  color: var(--ink-gilt);
+  font-family: var(--serif); font-size: 17px; font-weight: 600;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.hc-titles { flex: 1; min-width: 0; }
+.hc-title { font-family: var(--serif); font-size: 15px; font-weight: 600; letter-spacing: 0.005em; }
+.hc-sub {
+  font-size: 11.5px; color: var(--ink-2); margin-top: 1px;
+  font-variant-numeric: tabular-nums;
+}
+.hc-close { width: 26px; height: 26px; }
+.hc-close svg.icon { width: 14px; height: 14px; }
+
+.hc-diff {
+  display: flex; align-items: center; gap: 6px;
+  margin: 10px 1px 2px; padding-top: 9px;
+  border-top: 1px solid var(--hairline);
+  font-size: 11.5px; font-weight: 500; color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.hc-dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+
+.hc-bars { display: flex; gap: 7px; margin: 9px 1px 0; }
+.hc-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+/* the share of rounds in each bucket is a FIGURE, not a caption — it comes up
+   out of the quiet tier (3.1:1 on night paper) into the reading tier (5.8:1) */
+.hc-pct {
+  height: 13px; font-family: var(--figs); font-size: 9px; font-weight: 500;
+  color: var(--ink-2); font-variant-numeric: tabular-nums;
+}
+/* the bars stand in a ruled well, not on a grey chip */
+.hc-track {
+  width: 100%; height: 54px;
+  display: flex; align-items: flex-end;
+  border-radius: 1px;
+  background: var(--wash);
+  box-shadow: inset 0 0 0 1px var(--hairline);
+}
+.hc-fill {
+  width: 100%; min-height: 3px;
+  border-radius: 1px;
+  /* the bar is drawn UP the well and settles — the one thing on the card with
+     any weight at all, because it is the only thing carrying a quantity */
+  transition: height var(--t-page) var(--e-settle);
+}
+.hc-lab {
+  font-family: var(--serif); font-size: 9px; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2);
+}
+
+.hc-foot {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: 10px; padding-top: 8px;
+  border-top: 1px solid var(--rule);
+  font-size: 11px; color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+/* an action written on the page and ruled off — not a blue capsule. Set in
+   sentence case, not small caps: engraved lettering is for what a thing IS,
+   and these two are instructions. It also keeps "Change pin" on one line. */
+.hc-route {
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--serif);
+  font-size: 11.5px; font-weight: 600; letter-spacing: 0.015em;
+  color: var(--ink-2); white-space: nowrap;
+  padding: 6px 10px 5px; border-radius: 2px;
+  box-shadow: inset 0 0 0 1px var(--rule);
+  transition: background var(--t-chit) var(--e-press), color var(--t-chit) var(--e-press), box-shadow var(--t-chit) var(--e-press);
+}
+.hc-route:hover { background: var(--paper); color: var(--ink-gilt); box-shadow: inset 0 0 0 1px var(--gilt); }
+.hc-route:active { background: var(--wash-2); }
+.hc-route svg.icon { width: 13px; height: 13px; stroke-width: 1.7; }
+
+/* ── The scorecard stub — click any golfer ───────────────────────────────────
+   The half of the card the starter keeps: who is out, where they are, and the
+   nine boxes filled in so far. The boxes are a printed grid — hairline rules,
+   no tiles — and each score is written in the pencil its result deserves: red
+   under par, blue over, ink on it. */
+
+#followcard { width: 270px; }
+
+/* their initials on their own shirt colour: the stub and the voxel match. It
+   is the one place in the interface a colour comes from outside the club, and
+   it earns it — it is how you find them on the course. */
+.fc-av {
+  flex: none;
+  width: 32px; height: 32px;
+  display: grid; place-items: center;
+  border-radius: 2px;
+  color: rgba(20, 14, 4, 0.66);
+  font-family: var(--serif); font-size: 12.5px; font-weight: 600; letter-spacing: 0.04em;
+  box-shadow: inset 0 0 0 1px rgba(62, 46, 20, 0.22);
+}
+
+.fc-status {
+  display: flex; align-items: center; gap: 6px;
+  margin: 10px 1px 0; padding-top: 9px;
+  border-top: 1px solid var(--hairline);
+  font-size: 11.5px; font-weight: 500; color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.fc-status b { margin-left: auto; color: var(--ink); font-family: var(--serif); font-weight: 600; }
+.fc-live {
+  flex: none; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--green);
+  animation: fc-pulse 1.9s ease-in-out infinite;
+}
+@keyframes fc-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+
+/* the ruled grid of a real card: one box beside the next, divided by hairlines,
+   the whole run boxed off */
+.fc-card {
+  display: grid; grid-template-columns: repeat(9, 1fr);
+  gap: 0; margin-top: 9px;
+  box-shadow: 0 0 0 1px var(--rule);
+  background: var(--rule);
+  border-radius: 1px;
+}
+.fc-cell {
+  display: flex; flex-direction: column; align-items: center; gap: 0;
+  padding: 3px 0 4px;
+  background: var(--pg);
+  box-shadow: inset 0 0 0 0.5px var(--hairline);
+  /* the pencil moving one box along: a mark, at a mark's weight */
+  transition: background var(--t-chit) var(--e-press), color var(--t-chit) var(--e-press),
+              box-shadow var(--t-chit) var(--e-press);
+}
+.fc-cell i {
+  font-family: var(--figs); font-size: 8px; font-style: normal; font-weight: 500;
+  color: var(--ink-3);
+}
+.fc-cell b {
+  font-family: var(--serif); font-size: 13px; font-weight: 600;
+  font-variant-numeric: tabular-nums lining-nums; color: var(--ink);
+}
+.fc-cell.todo b { color: var(--ink-3); font-weight: 500; }
+/* the hole being played is the box the pencil is resting in */
+.fc-cell.now { background: var(--paper); box-shadow: inset 0 0 0 1px var(--gilt); }
+.fc-cell.now b { color: var(--ink-gilt); }
+.fc-cell.eg b { color: #8c1d10; }
+.fc-cell.eg { background: rgba(140, 29, 16, 0.10); }
+.fc-cell.bi b { color: var(--red); }
+.fc-cell.bo b { color: #4a7fb5; }
+.fc-cell.db b { color: #1e4482; }
+.fc-cell.db { background: rgba(30, 68, 130, 0.09); }
+
+.fc-notes {
+  margin-top: 10px; padding-top: 9px;
+  border-top: 1px solid var(--rule);
+}
+.fc-nh {
+  display: flex; align-items: baseline; justify-content: space-between;
+  font-family: var(--serif);
+  font-size: 9px; font-weight: 600; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--ink-3);
+}
+.fc-nh b {
+  font-family: var(--serif); font-size: 16px; font-weight: 600; letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.fc-nh b.good { color: var(--green); }
+.fc-nh b.ok { color: var(--blue); }
+.fc-nh b.meh { color: var(--ink-gilt); }
+.fc-nh b.bad { color: var(--red); }
+.fc-notes p { margin-top: 5px; font-size: 11.5px; line-height: 1.45; color: var(--ink-2); }
+.fc-av.star { cursor: pointer; box-shadow: inset 0 0 0 1px rgba(62, 46, 20, 0.22), 0 0 0 2px var(--gilt); }
+#fc-reasons { display: grid; gap: 3px; margin-top: 6px; }
+.fc-r {
+  position: relative; padding-left: 14px;
+  font-size: 11px; line-height: 1.4; color: var(--ink-2);
+}
+.fc-r::before {
+  position: absolute; left: 1px; top: 0;
+  font-size: 12px; font-weight: 700; line-height: 1.4;
+}
+.fc-r.ok::before { content: '+'; color: var(--green); }
+.fc-r.bad::before { content: '\2212'; color: var(--red); }
+.fc-by { display: block; margin-top: 3px; font-size: 10.5px; color: var(--ink-3); }
+
+.fc-tip { width: 100%; justify-content: center; margin-top: 10px; }
+.fc-tip.done { color: var(--ink-3); box-shadow: inset 0 0 0 1px var(--hairline); pointer-events: none; }
+/* the card's other instruction: hand the camera to the person on it. Same
+   ruled-off line as the tip; gilt while the walk is on, because during it this
+   button is the one piece of chrome that means anything. */
+.fc-walk { width: 100%; justify-content: center; margin-top: 10px; }
+.fc-walk + .fc-tip { margin-top: 6px; }
+.fc-walk.on { color: var(--ink-gilt); background: var(--paper); box-shadow: inset 0 0 0 1px var(--gilt); }
+
+/* ── The rating card — how the panel marked the course ─────────────────────── */
+
+#ratingcard { width: 296px; }
+.rt-head {
+  display: flex; align-items: baseline; gap: 9px;
+  margin: 1px 1px 9px; padding-bottom: 8px;
+  border-bottom: 1px solid var(--rule);
+}
+.rt-stars {
+  font-family: var(--serif); font-size: 24px; font-weight: 600; letter-spacing: 0.01em;
+  color: var(--ink-gilt); font-variant-numeric: tabular-nums lining-nums;
+}
+.rt-sub { font-size: 11.5px; font-weight: 500; color: var(--ink-2); }
+.rt-row {
+  display: grid; grid-template-columns: 88px 1fr 28px;
+  align-items: center; gap: 10px;
+  padding: 5px 1px;
+}
+.rt-name { font-family: var(--serif); font-size: 12.5px; font-weight: 600; }
+/* a ruled scale with the mark inked onto it */
+.rt-track { height: 5px; border-radius: 1px; background: var(--wash); box-shadow: inset 0 0 0 1px var(--hairline); overflow: hidden; }
+.rt-fill { height: 100%; background: var(--ink-gilt); transition: width var(--t-page) var(--e-settle); }
+.rt-val {
+  font-family: var(--figs); font-size: 10.5px; font-weight: 500;
+  color: var(--ink-2); text-align: right; font-variant-numeric: tabular-nums;
+}
+.rt-hints { margin-top: 9px; padding: 9px 1px 0; border-top: 1px solid var(--rule); display: flex; flex-direction: column; gap: 5px; }
+.rt-hint { font-size: 11.5px; color: var(--ink-2); line-height: 1.42; display: flex; gap: 6px; }
+.rt-hint b { color: var(--ink); font-family: var(--serif); font-weight: 600; flex: none; }
+
+/* ── Tee → pin linking ───────────────────────────────────────────────────── */
+
+/* These label the course, so they belong to the course: below the board and
+   below the tray, whose popovers a player is actively reading. At 41 they sat
+   over the dock — and #dock is its own stacking context, so no z-index on a
+   popover inside it could ever win. */
+#pair-markers { position: fixed; inset: 0; z-index: 39; pointer-events: none; transition: opacity var(--t-card) var(--e-press); }
+body.route-mode #pair-markers, body.link-mode #pair-markers { opacity: 0; pointer-events: none; }
+
+/* a paper tag tied to a tee or a pin that has not been linked yet */
+.pair-mark {
+  position: absolute; transform: translate(-50%, -50%);
+  display: flex; align-items: center; gap: 6px;
+  height: 27px; padding: 0 11px 0 8px;
+  border-radius: 2px;
+  background-color: var(--pg); background-image: var(--grain, none);
+  box-shadow: 0 0 0 1px var(--rule), 0 4px 12px rgba(38, 28, 12, 0.24);
+  font-family: var(--serif); font-size: 11.5px; font-weight: 600;
+  letter-spacing: 0.03em; color: var(--ink-2);
+  white-space: nowrap; pointer-events: auto;
+  animation: mark-in var(--t-card) var(--e-settle);
+  transition: transform var(--t-card) var(--e-settle), color var(--t-chit) var(--e-press), box-shadow var(--t-chit) var(--e-press);
+}
+@keyframes mark-in { from { opacity: 0; transform: translate(-50%, -50%) scale(0.78); } }
+.pair-mark:hover { transform: translate(-50%, -50%) scale(1.06); color: var(--ink-gilt); box-shadow: 0 0 0 1px var(--gilt), 0 5px 16px rgba(38, 28, 12, 0.3); }
+.pair-mark:active { transform: translate(-50%, -50%) scale(0.97); }
+.pair-mark svg.icon { width: 15px; height: 15px; stroke-width: 1.7; color: var(--ink-gilt); }
+
+#link-ui { position: fixed; inset: 0; z-index: 43; pointer-events: none; opacity: 0; transition: opacity var(--t-page) var(--e-press); }
+#link-ui.show { opacity: 1; }
+#link-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+/* the line is drawn in the club's second ink, on a paper-white ground so it
+   never disappears into the turf */
+.link-glow { fill: none; stroke: rgba(252, 248, 236, 0.9); stroke-width: 7.5; stroke-linecap: round; }
+.link-line {
+  fill: none; stroke: var(--blue); stroke-width: 2.6; stroke-linecap: round;
+  stroke-dasharray: 9 7; animation: link-flow 0.9s linear infinite;
+}
+.link-line.loose { stroke: rgba(43, 90, 166, 0.42); stroke-width: 2; }
+.link-current { fill: none; stroke: rgba(62, 46, 20, 0.4); stroke-width: 2; stroke-dasharray: 2 6; stroke-linecap: round; }
+@keyframes link-flow { to { stroke-dashoffset: -16; } }
+.link-cap { fill: var(--blue); stroke: #fcf8ec; stroke-width: 1.6; }
+.link-ring { fill: none; stroke: var(--blue); stroke-width: 2.2; }
+
+/* the length, written on a tag hung at the middle of the line */
+#link-label {
+  position: absolute; transform: translate(-50%, -50%);
+  display: flex; flex-direction: column; align-items: center; gap: 1px;
+  padding: 6px 13px 5px; border-radius: 2px;
+  pointer-events: none;
+  animation: pop-in var(--t-card) var(--e-settle);
+}
+.ll-yards {
+  font-family: var(--serif); font-size: 15px; font-weight: 600; letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.ll-par { font-size: 11px; font-weight: 500; color: var(--ink-2); white-space: nowrap; }
+
+#link-chip {
+  position: absolute; top: 78px; left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 11px;
+  padding: 9px 11px 9px 13px;
+  border-radius: 3px;
+  pointer-events: auto;
+  animation: chip-rise var(--t-ribbon) var(--e-flick);
+}
+.lc-icon {
+  display: grid; place-items: center;
+  width: 28px; height: 28px; border-radius: 2px;
+  background: var(--paper); box-shadow: inset 0 0 0 1px var(--gilt);
+  color: var(--ink-gilt);
+}
+.lc-icon svg.icon { width: 16px; height: 16px; stroke-width: 1.7; }
+#link-hint { font-size: 11px; color: var(--ink-2); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+.hc-actions { display: flex; gap: 8px; margin-top: 9px; }
+.hc-act { flex: 1; justify-content: center; }
+.hc-lock { color: var(--blue); font-weight: 600; }
+
+/* ── Route view ──────────────────────────────────────────────────────────── */
+
+#route-ui { position: fixed; inset: 0; z-index: 42; pointer-events: none; opacity: 0; transition: opacity var(--t-page) var(--e-press); }
+#route-ui.show { opacity: 1; }
+#route-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.route-glow { fill: none; stroke: rgba(252, 248, 236, 0.85); stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; }
+.route-line { fill: none; stroke: var(--blue); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 0.1 8; }
+.route-tee { fill: var(--blue); stroke: #fcf8ec; stroke-width: 1.5; }
+.route-flag { fill: none; stroke: var(--blue); stroke-width: 2; }
+
+/* the order of play, written on paper markers staked on each hole. Once a hole
+   has its place in the round the marker is made permanent: a painted plate with
+   the number cut into it, the same joinery as the board and the tray. */
+.route-badge {
+  position: absolute; transform: translate(-50%, -50%);
+  width: 28px; height: 28px;
+  border-radius: 2px;
+  background-color: var(--pg); background-image: var(--grain, none);
+  box-shadow: 0 0 0 1px var(--rule), 0 4px 12px rgba(38, 28, 12, 0.22);
+  font-family: var(--serif); font-size: 13.5px; font-weight: 600; color: var(--ink);
+  font-variant-numeric: tabular-nums lining-nums;
+  pointer-events: auto;
+  transition: transform var(--t-card) var(--e-settle), background-color var(--t-chit) var(--e-press), color var(--t-chit) var(--e-press), box-shadow var(--t-chit) var(--e-press);
+}
+.route-badge:hover { transform: translate(-50%, -50%) scale(1.14); box-shadow: 0 0 0 1px var(--gilt), 0 5px 16px rgba(38, 28, 12, 0.3); }
+.route-badge:active { transform: translate(-50%, -50%) scale(0.96); }
+.route-badge.sel {
+  background-color: var(--board-2); background-image: none;
+  color: var(--brass);
+  box-shadow: 0 0 0 1px var(--board-3), inset 0 0 0 1px var(--keyline), 0 5px 16px rgba(20, 16, 8, 0.4);
+}
+
+#route-chip {
+  position: absolute; top: 78px; left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 11px;
+  padding: 9px 11px 9px 15px;
+  border-radius: 3px;
+  pointer-events: auto;
+  animation: chip-rise var(--t-ribbon) var(--e-flick);
+}
+@keyframes chip-rise { from { opacity: 0; transform: translateX(-50%) translateY(8px); } }
+.rc-text { display: flex; flex-direction: column; gap: 1px; }
+.rc-title { font-family: var(--serif); font-size: 13.5px; font-weight: 600; letter-spacing: 0.01em; }
+#route-count { font-size: 11px; color: var(--ink-2); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.btn-plain.quiet { color: var(--ink-2); }
+.btn-plain.quiet:hover { background: var(--wash); color: var(--ink); }
+
+/* both fades are declared with the objects themselves, above */
+body.route-mode #dock, body.route-mode #milestone { opacity: 0; pointer-events: none; }
+
+/* ── The chit ────────────────────────────────────────────────────────────────
+   A slip from the pro shop pad, laid down for a beat. These appear constantly,
+   so it is the lightest object in the club: one sheet, one gilt edge down the
+   left where it was torn off the pad, and nothing else. No blur, no capsule,
+   and the same 0.35s throttle and 2.6s dwell it always had. */
+
+#toast {
+  position: fixed; bottom: 88px; left: 50%; transform: translateX(-50%);
+  z-index: 55;
+  background-color: var(--pg); background-image: var(--grain, none);
+  color: var(--ink);
+  font-family: var(--serif); font-size: 13px; font-weight: 500; letter-spacing: 0.01em;
+  padding: 9px 16px 8px; border-radius: 2px;
+  border-left: 2px solid var(--ink-gilt);
+  box-shadow: 0 0 0 1px var(--rule), 0 6px 20px rgba(38, 28, 12, 0.24);
+  animation: chit-in var(--t-chit) var(--e-flick);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+@keyframes chit-in { from { opacity: 0; transform: translateX(-50%) translateY(7px) rotate(-0.7deg); } }
+#toast.out { opacity: 0; transition: opacity var(--t-card) var(--e-press); }
+/* the stamp at the head of the slip. Same hairline, same ink, one shade back
+   from the sentence so the WORDS are what you read — it is a mark, not a
+   picture, and it is the club's own hand rather than the operating system's. */
+.tt-mk {
+  display: inline-block; vertical-align: -2px;
+  width: 14px; height: 14px; margin-right: 7px;
+  color: var(--ink-3);
+}
+.tt-mk .icon { width: 14px; height: 14px; display: block; stroke-width: 1.6; }
+/* An OCCASION's one button — "Watch" — ruled off beside the sentence in the
+   card's own instruction style (see .hc-route). A plain chit stays untouchable
+   so it can never sit between the cursor and the grass; only the chit that
+   carries a button accepts the pointer at all. */
+#toast { pointer-events: none; }
+#toast.act { pointer-events: auto; padding-right: 9px; }
+.tt-act {
+  font-family: var(--serif); font-size: 12px; font-weight: 700; letter-spacing: 0.02em;
+  color: var(--ink-gilt);
+  margin-left: 12px; padding: 3px 9px 2px; border-radius: 2px;
+  box-shadow: inset 0 0 0 1px var(--gilt);
+  transition: background var(--t-chit) var(--e-press), color var(--t-chit) var(--e-press);
+}
+.tt-act:hover { background: var(--paper); }
+.tt-act:active { background: var(--wash-2); }
+
+/* ── The pencil tick ─────────────────────────────────────────────────────────
+   Money landing on the course. Not a green number — a figure written on the
+   grass in the club's hand, lifted just clear of it by a paper-white halo so it
+   survives every turf colour the four themes produce. The halo is one text
+   shadow: no element, no layer, nothing to composite. */
+
+.floater {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-family: var(--serif);
+  font-size: 14.5px; font-weight: 600; letter-spacing: 0.01em;
+  color: #2c5c39;
+  text-shadow:
+     0 1px 0 rgba(255, 252, 242, 0.95), 0 -1px 0 rgba(255, 252, 242, 0.8),
+     1px 0 0 rgba(255, 252, 242, 0.8), -1px 0 0 rgba(255, 252, 242, 0.8);
+  animation: float-up 1.25s ease-out forwards;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.floater.gold { color: var(--ink-gilt); }
+.floater.big { font-size: 18px; }
+.floater.count { animation: float-up 1.8s ease-out forwards; }
+@keyframes float-up {
+  0%   { opacity: 0; margin-top: 6px; }
+  12%  { opacity: 1; }
+  100% { opacity: 0; margin-top: -46px; }
+}
+
+/* ── The majors ──────────────────────────────────────────────────────────────
+   Two surfaces, one voice. The Tour page in the Club sheet is the calendar and
+   the decision; the away card is what you read while you are standing on the
+   golf course. Neither one invents a new visual language — a championship is
+   just a very good day out, and it looks like the rest of the club. */
+
+/* Away card — leaderboard on a championship weekend, a book any other day */
+
+/* The card you read standing on the eighteenth green. It is the one surface
+   that is BOTH of the club's materials at once, because that is what it is: a
+   championship leaderboard — painted board, brass rules, cream figures — with
+   the club's own paper folded around it for everything that is not the board. */
+
+#away {
+  position: fixed; right: 16px; top: 74px;
+  z-index: 36;
+  width: 296px;
+  max-height: calc(100vh - 160px);
+  display: flex; flex-direction: column;
+  border-radius: 3px;
+  animation: rise var(--t-card) var(--e-settle);
+}
+#away.hidden { display: none; }
+.aw-head { padding: 13px 15px 10px; border-bottom: 1px solid var(--rule); }
+.aw-kick {
+  font-family: var(--serif);
+  font-size: 9px; font-weight: 600; letter-spacing: 0.17em;
+  text-transform: uppercase; color: var(--ink-gilt);
+}
+#away h3 { font-family: var(--serif); font-size: 17px; font-weight: 600; letter-spacing: 0.01em; margin-top: 4px; }
+#away > .aw-head p { font-size: 11px; color: var(--ink-2); margin-top: 3px; font-variant-numeric: tabular-nums; }
+
+#aw-body { flex: 1; min-height: 0; overflow-y: auto; padding: 10px 12px 4px; }
+#aw-body::-webkit-scrollbar { width: 0; }
+.aw-empty { font-size: 11.5px; color: var(--ink-2); line-height: 1.48; padding: 2px 3px 10px; }
+
+.aw-foot {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px 11px; margin-top: 2px;
+  border-top: 1px solid var(--rule);
+}
+#aw-live { flex: 1; min-width: 0; font-size: 11px; font-weight: 500; color: var(--ink-2);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#aw-home { flex: none; padding: 7px 13px 6px; font-size: 10.5px; }
+
+/* ── the board itself ──────────────────────────────────────────────────────
+   The leaderboard is a leaderboard: painted, ruled in brass, figures in cream,
+   under par in red exactly as a real one is. */
+.aw-lb {
+  display: flex; flex-direction: column;
+  padding: 4px 5px 5px; border-radius: 2px;
+  background: linear-gradient(180deg, var(--board) 0%, var(--board-2) 100%);
+  box-shadow: 0 0 0 1px var(--board-3), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+.aw-lbh {
+  display: flex; align-items: baseline; justify-content: space-between;
+  padding: 5px 6px 6px; margin: 0 -1px 2px;
+  border-bottom: 1px solid var(--keyline);
+  font-family: var(--serif);
+  font-size: 9px; font-weight: 600; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--brass-2);
+}
+.aw-lbh em { font-style: normal; letter-spacing: 0.02em; text-transform: none; font-size: 10.5px; color: var(--brass); }
+.aw-row {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  padding: 5px 6px; border-radius: 2px; text-align: left;
+  color: var(--face);
+  transition: background var(--t-chit) var(--e-press);
+}
+.aw-row + .aw-row { box-shadow: inset 0 1px 0 rgba(217, 190, 132, 0.13); }
+.aw-row:not(.off):hover { background: rgba(217, 190, 132, 0.11); }
+.aw-row.off { cursor: default; }
+.aw-row.gap { margin-top: 6px; box-shadow: inset 0 1px 0 var(--keyline); padding-top: 8px; }
+/* your own player is the name lit on the board */
+.aw-row.mine { background: rgba(217, 190, 132, 0.15); }
+.aw-row.mine:hover { background: rgba(217, 190, 132, 0.22); }
+.aw-row.mine .aw-nm { color: var(--brass); }
+.aw-pos {
+  flex: none; width: 28px;
+  font-family: var(--figs); font-size: 10px; font-weight: 500; color: var(--face-2);
+  font-variant-numeric: tabular-nums;
+}
+.aw-dot { flex: none; width: 5px; height: 19px; border-radius: 1px; }
+.aw-nm { flex: 1; min-width: 0; font-family: var(--serif); font-size: 12.5px; font-weight: 500; letter-spacing: 0.01em;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.aw-par { flex: none; width: 30px; text-align: right; font-family: var(--serif);
+  font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums lining-nums; color: var(--face); }
+.aw-par.under { color: #f08a7a; }        /* red numbers, as a board should be */
+.aw-par.over { color: var(--face-2); }
+.aw-thru { flex: none; width: 34px; text-align: right;
+  font-family: var(--figs); font-size: 10px; font-weight: 500; color: var(--face-2); font-variant-numeric: tabular-nums; }
+/* a tee time sits where the hole number will be, one notch quieter */
+.aw-thru em { font-style: normal; font-size: 9.5px; font-weight: 500; opacity: 0.72; }
+
+/* your player's card — this one is paper again: it is a scorecard, not a board */
+.aw-card { margin: 10px 1px 6px; padding: 10px 10px 9px; border-radius: 2px;
+  background: var(--wash); box-shadow: inset 0 0 0 1px var(--hairline); }
+.aw-ch { display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
+  font-family: var(--serif); font-size: 13px; font-weight: 600; letter-spacing: 0.01em; }
+.aw-ch em { font-style: normal; font-size: 10.5px; font-weight: 500; color: var(--ink-2);
+  font-variant-numeric: tabular-nums; }
+.aw-hs { display: flex; flex-wrap: wrap; gap: 2px; margin-top: 9px; }
+.aw-h {
+  width: 19px; height: 19px; display: grid; place-items: center;
+  border-radius: 1px; font-family: var(--serif); font-size: 11px; font-weight: 600;
+  box-shadow: inset 0 0 0 1px var(--hairline); color: var(--ink-2);
+  background: var(--pg);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.aw-h.par { color: var(--ink); }
+.aw-h.bird { background: var(--red-wash); color: var(--red); }
+.aw-h.eag { background: var(--red); color: #fdf6ea; box-shadow: none; }
+.aw-h.bog { background: rgba(43, 90, 166, 0.12); color: var(--blue); }
+.aw-h.dbl { background: rgba(30, 68, 130, 0.24); color: #14315e; }
+.aw-tot { display: flex; gap: 14px; margin-top: 10px; }
+.aw-tot span { font-family: var(--serif); font-size: 9px; font-weight: 600; letter-spacing: 0.13em;
+  text-transform: uppercase; color: var(--ink-3); }
+.aw-tot b { font-family: var(--serif); font-size: 13.5px; font-weight: 600; color: var(--ink); margin-left: 5px;
+  font-variant-numeric: tabular-nums lining-nums; }
+
+/* the Tour — walking a great course */
+.aw-story { font-size: 12px; line-height: 1.5; color: var(--ink-2); padding: 0 4px 4px; }
+/* what the championship week adds to the ground you are standing on */
+.aw-setup { margin: 0 4px 12px; }
+.aw-holes { display: flex; flex-direction: column; }
+/* the venue's holes, listed the way a card lists them: ruled, named, measured */
+.aw-hrow {
+  display: flex; align-items: center; gap: 9px; width: 100%;
+  padding: 7px 5px; border-radius: 2px; text-align: left;
+  transition: background var(--t-chit) var(--e-press);
+}
+.aw-hrow + .aw-hrow { border-top: 1px solid var(--hairline); }
+.aw-hrow:hover { background: var(--wash); }
+.aw-hrow:active { background: var(--wash-2); }
+.aw-hrow.on { background: var(--paper); }
+.aw-hn { flex: none; width: 17px; font-family: var(--serif); font-size: 12px; font-weight: 600; color: var(--ink-3);
+  font-variant-numeric: tabular-nums lining-nums; }
+.aw-hrow.on .aw-hn { color: var(--ink-gilt); }
+.aw-hname { flex: 1; min-width: 0; font-family: var(--serif); font-size: 12.5px; font-weight: 500; letter-spacing: 0.005em;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.aw-hy { flex: none; font-family: var(--serif); font-size: 12.5px; font-weight: 600; color: var(--ink);
+  font-variant-numeric: tabular-nums lining-nums; }
+.aw-hy em { font-style: normal; font-size: 9.5px; font-weight: 500; color: var(--ink-3); margin-left: 2px; }
+.aw-hp { flex: none; width: 34px; text-align: right; font-size: 11px; font-weight: 500; color: var(--ink-2); }
+.aw-hnote { font-size: 11.5px; line-height: 1.5; color: var(--ink-2);
+  padding: 2px 8px 11px 32px; animation: view-in var(--t-card) var(--e-settle); }
+
+/* away from home, there is nothing here to build */
+body.away #dock, body.away #milestone, body.away #btn-route { opacity: 0; pointer-events: none; }
+body.away #pill-rate, body.away #pill-holes { display: none; }
+
+/* ── The Tour page ───────────────────────────────────────────────────────── */
+
+.tr-ev {
+  padding: 13px 12px 12px; margin-top: 10px;
+  border-radius: 3px;
+  background: var(--wash-0);
+  box-shadow: inset 0 0 0 0.5px var(--hairline);
+}
+.tr-ev.live { background: color-mix(in srgb, var(--tc, var(--red)) 14%, transparent); box-shadow: none; }
+.tr-evh { display: flex; align-items: flex-start; gap: 10px; }
+.tr-evh > div:first-child { flex: 1; min-width: 0; }
+.tr-kick { font-size: 10px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase;
+  color: var(--ink-3); }
+.tr-name { font-size: 15px; font-weight: 750; letter-spacing: -0.025em; margin-top: 2px; }
+.tr-when { font-size: 11.5px; font-weight: 600; color: var(--ink-2); margin-top: 3px;
+  font-variant-numeric: tabular-nums; }
+.tr-when span { color: var(--ink-3); font-weight: 500; }
+.tr-liveb {
+  margin-left: 7px; padding: 2px 7px; border-radius: 2px;
+  font-size: 9.5px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--pg); background: var(--red);
+}
+.tr-purse { flex: none; text-align: right; font-size: 14px; font-weight: 800; letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums; }
+.tr-purse em { display: block; font-style: normal; font-size: 9.5px; font-weight: 600;
+  letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-3); margin-top: 1px; }
+.tr-blurb { font-size: 11.5px; line-height: 1.5; color: var(--ink-2); margin: 9px 0 0; }
+
+.tr-mini { display: flex; flex-direction: column; gap: 4px; margin-top: 10px;
+  padding: 9px 10px; border-radius: 3px; background: var(--wash-0); }
+.tr-mini span { font-size: 12px; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+.tr-mini b { display: inline-block; min-width: 26px; font-weight: 700; color: var(--ink-3); }
+.tr-mini i { font-style: normal; font-weight: 700; color: var(--ink-2); float: right; }
+.tr-mini i.under { color: var(--red); }
+
+.tr-entry, .tr-cand {
+  display: flex; align-items: center; gap: 10px;
+  margin-top: 8px; padding: 8px 10px;
+  border-radius: 3px; background: var(--wash-0);
+}
+.tr-entry i, .tr-cand i { flex: none; width: 8px; height: 26px; border-radius: 1px; }
+.tr-entry div, .tr-cand div { flex: 1; min-width: 0; }
+.tr-entry b, .tr-cand b { display: block; font-size: 13px; font-weight: 700; letter-spacing: -0.015em; }
+.tr-entry span, .tr-cand span { display: block; font-size: 11px; color: var(--ink-2); margin-top: 1px; }
+.tr-sh { font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--ink-3); margin: 12px 0 2px; }
+.tr-clash { flex: none; font-size: 10.5px; font-weight: 600; color: var(--ink-3); }
+.btn-primary.sm { flex: none; padding: 6px 13px; font-size: 12px; }
+.tr-why { font-size: 11.5px; color: var(--ink-3); margin-top: 10px; }
+.tr-acts { display: flex; gap: 8px; align-items: center; margin-top: 12px; }
+.tr-acts .btn-plain { color: var(--blue); }
+.tr-acts .btn-plain:hover { background: var(--pen-0); }
+
+.tr-res { display: flex; align-items: center; gap: 10px; padding: 7px 4px; }
+.tr-res + .tr-res { box-shadow: inset 0 0.5px 0 var(--hairline); }
+.tr-rp { flex: none; width: 34px; font-size: 11.5px; font-weight: 700; color: var(--ink-3);
+  font-variant-numeric: tabular-nums; }
+.tr-res.won .tr-rp { color: var(--gold); }
+.tr-rn { flex: 1; min-width: 0; font-size: 12.5px; font-weight: 600; letter-spacing: -0.015em; }
+.tr-rn em { display: block; font-style: normal; font-size: 10.5px; font-weight: 550; color: var(--ink-3); }
+.tr-rm { flex: none; font-size: 12px; font-weight: 700; color: var(--ink-2);
+  font-variant-numeric: tabular-nums; }
+.tr-setup { display: flex; align-items: center; gap: 9px; margin-top: 10px; }
+/* the setup's severity, stamped in the championship's own colour — the one
+   badge in the club that is allowed a colour from outside it, squared off so it
+   still reads as something stamped on paper rather than an app pill */
+.tr-setup b {
+  flex: none; padding: 3px 8px; border-radius: 2px;
+  font-family: var(--serif);
+  font-size: 11.5px; font-weight: 600; font-variant-numeric: tabular-nums lining-nums;
+  color: var(--pg); background: color-mix(in srgb, var(--tc, var(--ink-2)) 74%, #2c2a22);
+}
+.tr-setup span { font-size: 11px; font-weight: 550; color: var(--ink-2); line-height: 1.35; }
+
+/* a member's championship record, in the Club Book */
+.st-maj { margin-top: 12px; padding: 10px 11px 9px; border-radius: 3px;
+  background: var(--paper); }
+.st-majh { font-size: 10px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase;
+  color: var(--ink-gilt); margin-bottom: 5px; }
+.st-majr { display: flex; align-items: baseline; gap: 8px; padding: 3px 0; }
+.st-majr span { flex: none; font-size: 12px; font-weight: 650; letter-spacing: -0.015em; }
+.st-majr em { flex: 1; font-style: normal; font-size: 11px; font-weight: 550; color: var(--ink-2);
+  font-variant-numeric: tabular-nums; }
+.st-majr b { font-size: 11.5px; font-weight: 700; color: var(--ink-gilt); font-variant-numeric: tabular-nums; }
+.st-majr.won span { color: var(--gold); }
+.st-majr.open em { color: var(--blue); font-weight: 700; }
+/* the same hole strip on the Tour page sits in the card, not on the glass */
+.tr-ev .aw-hs { margin-top: 9px; padding: 0 2px; }
+
+/* ── Photo mode — the tripod ─────────────────────────────────────────────────
+   One press and the interface leaves the frame entirely. Hidden with
+   visibility, not display, so nothing reflows on the way back in and every
+   card is standing exactly where it was when the tripod folds. The chip below
+   is the ONE piece of chrome that stays: the same card stock as everything
+   else, five controls, no icons pretending to be a camera app. */
+body.photo-mode #topbar, body.photo-mode #dock, body.photo-mode #milestone,
+body.photo-mode #away, body.photo-mode .fcard, body.photo-mode #toast,
+body.photo-mode #overlay, body.photo-mode #pair-markers,
+body.photo-mode #link-ui, body.photo-mode #route-ui,
+body.photo-mode .modal-wrap {
+  visibility: hidden !important;
+}
+
+/* the thirds. An etched hairline — a dark line with a light line one pixel
+   under it — because a single white line dies over snow-theme greens and a
+   single dark one dies in the night sky. pointer-events off: the grid is
+   drawn on the lens, not on the course. */
+#photo-grid {
+  position: fixed; inset: 0; z-index: 40; pointer-events: none;
+  background:
+    linear-gradient(rgba(24, 20, 12, 0.20) 1px, transparent 1px) 0 -1px / 100% 33.334%,
+    linear-gradient(90deg, rgba(24, 20, 12, 0.20) 1px, transparent 1px) -1px 0 / 33.334% 100%,
+    linear-gradient(rgba(255, 255, 255, 0.30) 1px, transparent 1px) 0 0 / 100% 33.334%,
+    linear-gradient(90deg, rgba(255, 255, 255, 0.30) 1px, transparent 1px) 0 0 / 33.334% 100%;
+}
+
+#photo-ui {
+  position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%);
+  z-index: 60;
+  display: flex; flex-direction: column; align-items: center; gap: 7px;
+}
+#photo-ui .ph-chip {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 9px 8px 12px;
+  white-space: nowrap;
+}
+.ph-kick {
+  font-family: var(--serif);
+  font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink-3);
+  margin-right: 2px;
+}
+.ph-tog {
+  font-family: var(--serif);
+  font-size: 11.5px; font-weight: 600; letter-spacing: 0.015em;
+  color: var(--ink-2);
+  padding: 5px 9px 4px; border-radius: 2px;
+  box-shadow: inset 0 0 0 1px var(--rule);
+  transition: background var(--t-chit) var(--e-press), color var(--t-chit) var(--e-press),
+    box-shadow var(--t-chit) var(--e-press);
+}
+.ph-tog:hover { background: var(--paper); color: var(--ink-gilt); }
+.ph-tog:active { background: var(--wash-2); }
+.ph-tog.on { color: var(--ink-gilt); background: var(--paper); box-shadow: inset 0 0 0 1px var(--gilt); }
+.ph-tilt { display: flex; align-items: center; gap: 6px; padding: 0 2px; }
+.ph-tilt > span {
+  font-family: var(--serif);
+  font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink-3);
+}
+#ph-tilt { width: 84px; accent-color: var(--ink-gilt); }
+#ph-level { min-width: 40px; text-align: center; font-variant-numeric: tabular-nums; }
+/* the caption under the chip: the working hint, then "Saved · <name>" */
+.ph-note {
+  font-family: var(--serif);
+  font-size: 11px; font-weight: 550; color: var(--ink-2);
+  background-color: var(--pg); background-image: var(--grain, none);
+  padding: 3px 10px 2px; border-radius: 2px;
+  box-shadow: 0 0 0 1px var(--rule);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── The lens ────────────────────────────────────────────────────────────────
+   Walking with somebody: the world is the picture, so the two cards that
+   narrate the ARCHITECT's work step back — the same treatment route view
+   gives them. The follow card stays: it is the walk's own remote and the
+   round's live scorecard, repinned as a lower-third by updateFollowCardPos. */
+body.lens-mode #milestone, body.lens-mode #pair-markers {
+  opacity: 0; pointer-events: none;
+}
+
+/* ── The arrival ─────────────────────────────────────────────────────────────
+   First boot only (and the boot after Start Over). The one composed CINEMATIC
+   in the game, and the third declared exception to the motion ladder alongside
+   the dwell and the ambient loop: a title that breathes in and out over the
+   settling camera cannot do it in 320ms, so the title beat carries its own
+   durations here and nowhere else. Everything solid — the plaque, the tray,
+   the first goal — still arrives at the ladder's own weights (--t-page for
+   joinery, --t-card for card stock). The whole sequence is skippable by any
+   touch, runs once per save, and is pure presentation: pointer-events none
+   throughout, so it can never delay input even while it plays. */
+#arrival {
+  position: fixed; inset: 0; z-index: 60;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none;
+}
+.ar-inner { text-align: center; transform: translateY(-4vh); }
+.ar-name {
+  font-family: var(--serif);
+  font-size: clamp(46px, 7.5vw, 88px);
+  font-weight: 600; letter-spacing: 0.03em; color: var(--ink);
+  /* a breath of the club's own paper behind the ink, so the wordmark holds on
+     whichever pastel the island happens to put beneath it */
+  text-shadow: 0 1px 0 rgba(247, 242, 230, 0.55), 0 0 24px rgba(247, 242, 230, 0.45);
+  opacity: 0; transform: translateY(10px);
+  transition: opacity 0.9s var(--e-settle), transform 0.9s var(--e-settle);
+}
+.ar-rule {
+  width: 0; height: 1px; margin: 14px auto 12px;
+  background: var(--ink-2);
+  opacity: 0;
+  transition: width 1.1s var(--e-settle), opacity 0.9s var(--e-settle);
+}
+.ar-sub {
+  font-family: var(--serif);
+  font-size: clamp(11px, 1.3vw, 14px);
+  font-weight: 600; letter-spacing: 0.24em; text-transform: uppercase;
+  color: var(--ink-2);
+  text-shadow: 0 1px 0 rgba(247, 242, 230, 0.5);
+  opacity: 0; transform: translateY(6px);
+  transition: opacity 0.9s var(--e-settle) 0.25s, transform 0.9s var(--e-settle) 0.25s;
+}
+#arrival.on .ar-name { opacity: 1; transform: translateY(0); }
+#arrival.on .ar-rule { width: min(150px, 24vw); opacity: 0.55; }
+#arrival.on .ar-sub { opacity: 1; transform: translateY(0); }
+#arrival.out .ar-name, #arrival.out .ar-rule, #arrival.out .ar-sub {
+  opacity: 0; transition: opacity 0.7s var(--e-press);
+}
+
+/* the fixtures wait out of frame, then take their places at their own mass:
+   the plaque and the tray are joinery (--t-page), the first goal is card
+   stock and keeps its own rise. While a fixture waits it cannot be pressed. */
+#topbar.ar-pre { opacity: 0; transform: translate(-50%, calc(-100% - 18px)); pointer-events: none; }
+#dock.ar-pre { opacity: 0; transform: translateY(calc(100% + 22px)); pointer-events: none; }
+#milestone.ar-pre { opacity: 0; pointer-events: none; animation: none; }
+#topbar.ar-in { animation: ar-plaque var(--t-page) var(--e-settle) both; }
+#dock.ar-in { animation: ar-tray var(--t-page) var(--e-settle) both; }
+#milestone.ar-in { animation: rise var(--t-card) var(--e-settle) both; }
+@keyframes ar-plaque {
+  from { opacity: 0; transform: translate(-50%, calc(-100% - 18px)); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+@keyframes ar-tray {
+  from { opacity: 0; transform: translateY(calc(100% + 22px)); }
+  to { opacity: 1; transform: translateY(0); }
+}
+/* nothing lands on the wall while the club is still saying its name */
+body.arriving #toast { visibility: hidden; }
+
+@media (prefers-reduced-motion: reduce) {
+  /* the reduced arrival is a title that appears and leaves in opacity alone,
+     and fixtures that simply ARE in place — no dolly, no drop, no rise */
+  .ar-name, .ar-rule, .ar-sub {
+    transform: none; transition-property: opacity; transition-delay: 0s;
+  }
+  #arrival.on .ar-name, #arrival.on .ar-sub { transform: none; }
+  #arrival.on .ar-rule { width: min(150px, 24vw); }
+  #topbar.ar-pre { transform: translateX(-50%); }
+  #dock.ar-pre, #milestone.ar-pre { transform: none; }
+  #topbar.ar-in, #dock.ar-in, #milestone.ar-in { animation: none; }
+}
+
+/* a property first seen after dark: the ink itself would drown, so the title
+   writes in the club's paper instead — a lit sign over a dark course */
+body.night .ar-name { color: var(--pg); text-shadow: 0 1px 2px rgba(10, 14, 20, 0.55), 0 0 26px rgba(247, 242, 230, 0.28); }
+body.night .ar-sub { color: var(--pg-dip); text-shadow: 0 1px 2px rgba(10, 14, 20, 0.5); }
+body.night .ar-rule { background: var(--pg-dip); }

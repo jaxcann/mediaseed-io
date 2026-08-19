@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<base href="/fairways/" />
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#eef3ee" />
+<title>Fairways</title>
+<meta name="description" content="Fairways — build, run and cherish a golf club of your own. A voxel course architect with real tee times, star golfers, majors, and a club book that remembers every season." />
+<meta property="og:title" content="Fairways" />
+<meta property="og:description" content="A course of your own — build it, route it, run the tee sheet, and impress the game's greats." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://mediaseed.io/fairways" />
+<!-- the club's own flag, in the club's own ink on the club's own paper — the
+     same hairline drawing as ICONS.flag, not the operating system's emoji -->
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='4' fill='%23f7f2e6'/><g fill='none' stroke='%232b2317' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M7 20.5V4'/><path d='M7 4.5h9.5L14 7.8l2.5 3.3H7'/></g></svg>" />
+<link rel="stylesheet" href="style.css" />
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+  <div id="scene"></div>
+  <div id="overlay"></div>
+
+  <!-- The arrival — first boot (and the boot after Start Over) only. The island
+       is revealed under the settling camera, the club says its name once in its
+       own type, and the plaque, the tray and the first goal take their places.
+       Pure presentation: pointer-events none, skipped by any touch, and never
+       shown again once a save exists. -->
+  <div id="arrival" class="hidden" aria-hidden="true">
+    <div class="ar-inner">
+      <div class="ar-name">Fairways</div>
+      <div class="ar-rule"></div>
+      <div class="ar-sub">A course of your own</div>
+    </div>
+  </div>
+
+  <!-- The honours board — five engraved fields over the pro shop door.
+       Each label lives in data-lab so the live figure writes cannot wipe it. -->
+  <header id="topbar">
+    <div class="brand">Fairways</div>
+    <div class="stats">
+      <div class="pill money" id="pill-money" data-lab="Cash">$0</div>
+      <div class="pill" id="pill-rate" data-lab="Income">$0 / min</div>
+      <div class="pill" id="pill-stars" data-lab="Rating">★ —</div>
+      <div class="pill" id="pill-holes" data-lab="Course">No holes</div>
+      <div class="pill" id="pill-golfers" data-lab="Out">0 on course</div>
+    </div>
+    <div class="actions">
+      <button id="btn-route" class="icon-btn hidden" title="Route the course"></button>
+      <button id="btn-photo" class="icon-btn" title="Photograph the course (P)"></button>
+      <button id="btn-sound" class="icon-btn" title="Sound"></button>
+      <button id="btn-upgrades" class="btn-primary">Club</button>
+    </div>
+  </header>
+
+  <!-- The architect's tool tray -->
+  <nav id="dock"></nav>
+
+  <!-- Goals card -->
+  <aside id="milestone" class="card hidden">
+    <div class="ms-kicker">Next goal</div>
+    <h3 id="ms-title"></h3>
+    <p id="ms-sub"></p>
+    <div id="ms-rows"></div>
+    <div class="ms-reward">Reward <b id="ms-reward"></b></div>
+  </aside>
+
+  <!-- Away card — a championship leaderboard, or a course to walk -->
+  <aside id="away" class="card hidden">
+    <div class="aw-head">
+      <div class="aw-kick" id="aw-kick"></div>
+      <h3 id="aw-title"></h3>
+      <p id="aw-sub"></p>
+    </div>
+    <div id="aw-body"></div>
+    <div class="aw-foot">
+      <span id="aw-live"></span>
+      <button id="aw-home" class="btn-primary">Return</button>
+    </div>
+  </aside>
+
+  <!-- The Club Book — one bound ledger, opened on the pro shop desk.
+       Six ribbon tabs down the fore-edge; the spread paginates; the leaf turns. -->
+  <div id="scrim" class="hidden"></div>
+  <div id="book" class="hidden" role="dialog" aria-modal="true" aria-label="The Club Book">
+    <div class="bk-block" id="bk-block">
+      <div class="bk-edge before" id="bk-edge-b" aria-hidden="true"></div>
+      <div class="bk-edge after" id="bk-edge-a" aria-hidden="true"></div>
+      <div class="bk-boards" aria-hidden="true"></div>
+
+      <div class="bk-spread" id="bk-spread">
+        <div class="bk-paper" id="bk-paper">
+          <div class="bk-flow cv-view" id="bk-flow"></div>
+        </div>
+        <div class="bk-gutter" aria-hidden="true"></div>
+        <div class="bk-print" aria-hidden="true">
+          <span class="bk-run l" id="bk-run-l"></span>
+          <span class="bk-run r" id="bk-run-r"></span>
+          <span class="bk-fol l" id="bk-fol-l"></span>
+          <span class="bk-fol r" id="bk-fol-r"></span>
+        </div>
+        <!-- the turning leaf: static half + a two-faced page, built only mid-turn -->
+        <div class="bk-turn" id="bk-turn" aria-hidden="true">
+          <div class="bk-hold" id="bk-hold"></div>
+          <div class="bk-cast" id="bk-cast"></div>
+          <div class="bk-leaf" id="bk-leaf">
+            <div class="bk-face front" id="bk-face-f"></div>
+            <div class="bk-face back" id="bk-face-b"></div>
+            <div class="bk-lead" aria-hidden="true"></div>
+          </div>
+        </div>
+        <div class="bk-grab fwd" id="bk-grab" title="Drag the corner"></div>
+        <div class="bk-grab back" id="bk-grab-b" title="Drag the corner"></div>
+      </div>
+
+      <div class="bk-cover" id="bk-cover" aria-hidden="true">
+        <div class="bk-cover-in">
+          <span class="bk-crest" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 20.5V4"/><path d="M7 4.5h9.5L14 7.8l2.5 3.3H7"/></svg></span>
+          <span class="bk-cname">Fairways</span>
+          <span class="bk-crule"></span>
+          <span class="bk-ctitle">Club Book</span>
+          <!-- the club's standing, tooled under the title once it has one —
+               written by syncCover(); empty (and unprinted) for a bare field -->
+          <span class="bk-cstand" id="bk-cstand"></span>
+        </div>
+      </div>
+    </div>
+    <nav class="bk-tabs" id="bk-tabs" aria-label="Sections"></nav>
+    <button id="bk-close" class="bk-close" title="Close the book (Esc)"></button>
+  </div>
+
+  <!-- Welcome back -->
+  <div id="welcome" class="modal-wrap hidden">
+    <div class="modal card">
+      <div class="modal-kick" id="welcome-kick">While you were away</div>
+      <h2>Welcome back</h2>
+      <p id="welcome-text">Your course kept earning while you were away.</p>
+      <div class="modal-amount" id="welcome-amount">+$0</div>
+      <button id="btn-collect" class="btn-primary big">Collect</button>
+    </div>
+  </div>
+
+  <!-- The one destructive act in the game, put to the player on the club's own
+       paper. It used to be window.confirm(): an operating-system grey box in
+       the operating system's font with the operating system's buttons, over a
+       book bound in green cloth — the single largest borrowed surface left in
+       the club, and the one moment where it mattered most that the club was
+       the thing speaking. Same card stock, same gilt kicker, same joinery
+       button as every other notice; the safe answer is the one under the
+       cursor and under Enter, and the destructive one is in the red pencil the
+       book already writes "Start Over…" in. -->
+  <div id="confirm" class="modal-wrap hidden">
+    <div class="modal card" role="alertdialog" aria-modal="true"
+         aria-labelledby="confirm-h" aria-describedby="confirm-p">
+      <div class="modal-kick">The bookplate</div>
+      <h2 id="confirm-h">Start over?</h2>
+      <p id="confirm-p">The course, the members, the honours and every dollar
+        earned here are erased. The island starts again bare.</p>
+      <div class="modal-acts">
+        <button id="confirm-no" class="btn-primary big">Keep the club</button>
+        <button id="confirm-yes" class="btn-plain">Erase and start over</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hole card (orbit mode · click a tee or pin) -->
+  <div id="holecard" class="fcard card hidden"></div>
+
+  <!-- Follow card (click any golfer) -->
+  <div id="followcard" class="fcard card hidden"></div>
+
+  <!-- Course rating breakdown (click the star pill) -->
+  <div id="ratingcard" class="fcard card hidden"></div>
+
+  <!-- Unlinked tee / pin badges (orbit mode) -->
+  <div id="pair-markers"></div>
+
+  <!-- Tee → pin linking overlay -->
+  <div id="link-ui" class="hidden">
+    <svg id="link-svg"></svg>
+    <div id="link-label" class="card hidden">
+      <span class="ll-yards" id="link-yards"></span>
+      <span class="ll-par" id="link-par"></span>
+    </div>
+    <div id="link-chip" class="card">
+      <span class="lc-icon" id="link-icon"></span>
+      <div class="rc-text">
+        <span class="rc-title" id="link-title">Link a hole</span>
+        <span id="link-hint">Pick a tee or a pin</span>
+      </div>
+      <button id="link-cancel" class="btn-plain quiet">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Route view overlay -->
+  <div id="route-ui" class="hidden">
+    <svg id="route-svg"></svg>
+    <div id="route-badges"></div>
+    <div id="route-chip" class="card">
+      <div class="rc-text">
+        <span class="rc-title">Route the course</span>
+        <span id="route-count">Tap holes in the order they should play</span>
+      </div>
+      <button id="route-cancel" class="btn-plain quiet">Cancel</button>
+      <button id="route-done" class="btn-primary">Done</button>
+    </div>
+  </div>
+
+  <div id="toast" class="hidden"></div>
+
+  <!-- Photo mode — the tripod. The interface leaves the frame; this chip is
+       the one thing that stays, and the grid is an optional pair of thirds. -->
+  <div id="photo-grid" class="hidden" aria-hidden="true"></div>
+  <div id="photo-ui" class="hidden">
+    <div class="ph-chip card">
+      <span class="ph-kick">Photograph</span>
+      <button id="ph-grid" class="ph-tog">Grid</button>
+      <button id="ph-gold" class="ph-tog">Golden hour</button>
+      <label class="ph-tilt"><span>Tilt</span>
+        <input id="ph-tilt" type="range" min="-12" max="12" step="0.5" value="0">
+      </label>
+      <button id="ph-level" class="ph-tog" title="Straighten">0°</button>
+      <button id="ph-shot" class="btn-primary">Capture</button>
+      <button id="ph-exit" class="icon-btn" title="Put the camera away (Esc)"></button>
+    </div>
+    <span class="ph-note" id="ph-note"></span>
+  </div>
+
+  <script type="module" src="game.js"></script>
+</body>
+</html>
