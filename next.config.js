@@ -6,6 +6,10 @@ const nextConfig = {
       // Fairways lives in public/fairways as a static game; this serves it at
       // the clean path (public files themselves win before this rewrite runs)
       { source: "/fairways", destination: "/fairways/index.html" },
+      // BACKYARD, same arrangement — the game is static ES modules and runs
+      // fully offline (practice, story, kickball); its online mode politely
+      // grays itself out when there is no match server behind the path
+      { source: "/ctf", destination: "/ctf/index.html" },
     ];
   },
   async redirects() {
