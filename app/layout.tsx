@@ -2,49 +2,47 @@ import type { Metadata, Viewport } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import { ScrollProgress } from "@/components/ScrollProgress";
-import { CursorFollower } from "@/components/CursorFollower";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://mediaseed.io"),
-  title: "Mediaseed — a content network",
+  metadataBase: new URL("https://www.mediaseed.io"),
+  title: "Jax Cannon | media producer & AI-native builder",
   description:
-    "The HQ of the Mediaseed network — YouTube channels, daily games, and iOS apps, all grown in-house and made in Georgia.",
+    "Video, motion graphics, and social content, plus shipped software. 1M+ organic views for a 7-location medical practice, PBS post-production credits, two App Store apps, and two browser games.",
   keywords: [
-    "Mediaseed",
-    "content network",
-    "YouTube channels",
-    "daily game",
-    "DAILY REBUILD",
+    "Jax Cannon",
+    "media producer",
+    "motion graphics",
+    "social media manager",
+    "video editor",
+    "AI-native",
+    "creative technologist",
     "Surgepod",
     "DayTapes",
-    "iOS apps",
-    "Georgia",
+    "Fairways",
+    "Athens Georgia",
   ],
-  authors: [{ name: "Mediaseed" }],
-  creator: "Mediaseed",
+  authors: [{ name: "Jax Cannon" }],
+  creator: "Jax Cannon",
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://mediaseed.io",
-    siteName: "Mediaseed",
-    title: "Mediaseed — a content network",
+    url: "https://www.mediaseed.io",
+    siteName: "Jax Cannon | mediaseed",
+    title: "Jax Cannon | media producer & AI-native builder",
     description:
-      "The HQ of the Mediaseed network — YouTube channels, daily games, and iOS apps, all grown in-house and made in Georgia.",
+      "Video, motion graphics, and social content, plus shipped software. 1M+ organic views, PBS credits, two App Store apps, two browser games.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Mediaseed — a content network",
+    title: "Jax Cannon | media producer & AI-native builder",
     description:
-      "Channels, games, and apps — all grown in-house. This is the HQ.",
+      "Video, motion, social, and shipped software. 1M+ organic views, PBS credits, 4 shipped projects.",
     creator: "@mediaseed",
   },
   robots: {
     index: true,
     follow: true,
-  },
-  icons: {
-    icon: "/favicon.ico",
   },
   formatDetection: {
     telephone: false,
@@ -54,7 +52,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0a0a0a",
+  themeColor: "#FAF6F0",
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
@@ -71,9 +69,8 @@ export default function RootLayout({
       lang="en"
       className={`${GeistSans.variable} ${GeistMono.variable}`}
     >
-      <body className="bg-bg text-fg font-sans antialiased">
+      <body className="bg-hq-cream text-hq-ink font-sans antialiased">
         <ScrollProgress />
-        <CursorFollower />
         {children}
         {/* Vercel Web Analytics — activates once Analytics is enabled on the
             project in the Vercel dashboard; harmless no-op until then. */}

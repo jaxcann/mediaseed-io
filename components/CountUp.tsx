@@ -27,7 +27,9 @@ export function CountUp({
   className = "",
 }: Props) {
   const ref = useRef<HTMLSpanElement>(null);
-  const [value, setValue] = useState(0);
+  // Starts at the final value so SSR output, crawlers, and no-JS readers get
+  // the true stat; the observer resets to 0 the same frame the count begins.
+  const [value, setValue] = useState(to);
   const started = useRef(false);
 
   useEffect(() => {
@@ -38,16 +40,14 @@ export function CountUp({
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    if (reduced) {
-      setValue(to);
-      return;
-    }
+    if (reduced) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
           if (entry.isIntersecting && !started.current) {
             started.current = true;
+            setValue(0);
             const start = performance.now();
             const tick = (now: number) => {
               const t = Math.min((now - start) / duration, 1);
@@ -70,8 +70,15 @@ export function CountUp({
     ? formatCompact(value, decimals)
     : Math.round(value).toLocaleString();
 
+  const finalText =
+    (compact ? formatCompact(to, decimals) : to.toLocaleString()) + suffix;
+
   return (
-    <span ref={ref} className={className}>
+    <span
+      ref={ref}
+      className={`inline-block tabular-nums ${className}`}
+      style={{ minWidth: `${finalText.length}ch` }}
+    >
       {display}
       {suffix}
     </span>

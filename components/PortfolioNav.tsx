@@ -5,13 +5,14 @@ import Link from "next/link";
 import { Menu, X } from "lucide-react";
 
 const links = [
-  { href: "#channels", label: "Channels" },
-  { href: "#drops", label: "Drops" },
+  { href: "#case-studies", label: "Case studies" },
+  { href: "#motion", label: "Motion" },
   { href: "#games", label: "Games" },
   { href: "#apps", label: "Apps" },
+  { href: "#about", label: "About" },
 ];
 
-export function HqNav() {
+export function PortfolioNav() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -24,8 +25,13 @@ export function HqNav() {
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    if (open) document.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = "";
+      document.removeEventListener("keydown", onKey);
     };
   }, [open]);
 
@@ -47,17 +53,10 @@ export function HqNav() {
             <Link
               href="/"
               className="flex items-center gap-2 font-mono text-sm tracking-tight lowercase text-hq-ink"
-              aria-label="Mediaseed home"
+              aria-label="Jax Cannon home"
             >
-              <span
-                aria-hidden="true"
-                className="h-2.5 w-2.5 rounded-full"
-                style={{
-                  background:
-                    "linear-gradient(135deg, #E85DA8, #8B72EA 50%, #38B8D8)",
-                }}
-              />
-              mediaseed
+              <span aria-hidden="true" className="h-2.5 w-2.5 rounded-full hq-grad-bg" />
+              jax cannon
             </Link>
 
             <nav className="hidden md:flex items-center gap-6 lg:gap-8">
@@ -71,18 +70,19 @@ export function HqNav() {
                 </Link>
               ))}
               <a
-                href="#contact"
+                href="mailto:jaxonkale124@gmail.com"
                 className="text-sm font-semibold px-4 py-2 rounded-full bg-hq-ink text-hq-cream hover:opacity-85 transition-opacity"
               >
-                Say hi
+                Email me
               </a>
             </nav>
 
             <button
               type="button"
-              className="md:hidden p-2 -mr-2 text-hq-ink"
+              className="md:hidden inline-flex h-11 w-11 items-center justify-center -mr-2.5 text-hq-ink"
               aria-label={open ? "Close menu" : "Open menu"}
               aria-expanded={open}
+              aria-controls="mobile-menu"
               onClick={() => setOpen((v) => !v)}
             >
               {open ? <X size={22} /> : <Menu size={22} />}
@@ -93,8 +93,11 @@ export function HqNav() {
 
       {/* Mobile fullscreen menu */}
       <div
-        className={`md:hidden fixed inset-0 z-30 bg-hq-cream transition-opacity duration-300 ${
-          open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        id="mobile-menu"
+        className={`md:hidden fixed inset-0 z-30 bg-hq-cream transition-[opacity,visibility] duration-300 ${
+          open
+            ? "opacity-100 visible pointer-events-auto"
+            : "opacity-0 invisible pointer-events-none"
         }`}
         style={{
           paddingLeft: "env(safe-area-inset-left)",
@@ -117,15 +120,15 @@ export function HqNav() {
               </Link>
             ))}
             <a
-              href="#contact"
+              href="mailto:jaxonkale124@gmail.com"
               onClick={() => setOpen(false)}
               className="mt-8 inline-flex items-center justify-center text-base font-semibold px-6 py-4 rounded-full bg-hq-ink text-hq-cream"
             >
-              Say hi
+              Email me
             </a>
           </nav>
           <div className="mt-auto pt-8 font-mono text-xs text-hq-ink-soft">
-            hello@mediaseed.io · a content network
+            jaxonkale124@gmail.com · Athens, GA · open to remote
           </div>
         </div>
       </div>

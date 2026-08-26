@@ -3,7 +3,11 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
+  /* The signature iridescent gradient, defined once. Keep app/icon.tsx and
+     app/opengraph-image.tsx in sync by hand — ImageResponse cannot read CSS vars. */
+  --hq-grad: linear-gradient(94deg, #e85da8 0%, #8b72ea 32%, #38b8d8 64%, #ff9a62 100%);
+  --hq-grad-soft: linear-gradient(94deg, #f6a8d8 0%, #b9a8f5 32%, #7dd6e8 64%, #ffc29e 100%);
 }
 
 html {
@@ -13,13 +17,14 @@ html {
   /* Prevent iOS Safari from auto-resizing text on orientation change */
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
-  /* iOS rubber-band overscroll background — keep it dark, not white */
-  background-color: #0a0a0a;
+  /* iOS rubber-band overscroll background matches the cream page */
+  background-color: #faf6f0;
+  scrollbar-color: rgba(20, 19, 25, 0.25) transparent;
 }
 
 body {
-  background-color: #0a0a0a;
-  color: #fafafa;
+  background-color: #faf6f0;
+  color: #141319;
   font-feature-settings: "ss01", "cv11";
   /* Modern overflow chaining */
   overscroll-behavior-y: none;
@@ -34,7 +39,7 @@ body {
 a,
 button,
 [role="button"] {
-  -webkit-tap-highlight-color: rgba(74, 103, 65, 0.18);
+  -webkit-tap-highlight-color: rgba(232, 93, 168, 0.16);
 }
 
 /* iOS Safari zooms in on focused inputs whose font-size < 16px. Force 16px on small viewports. */
@@ -82,45 +87,6 @@ p {
   background-size: 100% 1px;
 }
 
-/* Hide the system cursor on devices that have a hover-capable cursor — our follower replaces it.
-   Touch / coarse-pointer devices keep their native cursor. */
-@media (hover: hover) and (pointer: fine) {
-  /* Disabled by default; enable per-app when CursorFollower is mounted. We keep system cursor visible
-     for now since the follower is a complement, not a replacement. */
-}
-
-/* Slow-bloom pulse for accent dots inside a DotField */
-@keyframes dot-bloom {
-  0%,
-  100% {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.6);
-    box-shadow: 0 0 0 0 rgba(74, 103, 65, 0);
-  }
-  50% {
-    opacity: 0.95;
-    transform: translate(-50%, -50%) scale(1.35);
-    box-shadow: 0 0 14px 1px rgba(74, 103, 65, 0.45);
-  }
-}
-
-/* Soft "ping" for inline live-indicator dots — gentler than tailwind's default ping */
-@keyframes ping-soft {
-  0% {
-    transform: scale(1);
-    opacity: 0.5;
-  }
-  80%,
-  100% {
-    transform: scale(2.4);
-    opacity: 0;
-  }
-}
-
-.animate-ping-soft {
-  animation: ping-soft 2.4s cubic-bezier(0, 0, 0.2, 1) infinite;
-}
-
 /* Section reveal — opacity-only fade so layout doesn't shift on initial paint */
 .reveal {
   opacity: 0;
@@ -143,9 +109,13 @@ p {
     transition: none;
   }
 
-  .animate-ping-soft,
-  [style*="dot-bloom"] {
+  /* Content visibility must never depend on an animation completing:
+     the hero's fade-up/fade-in elements carry inline opacity: 0. */
+  .animate-fade-up,
+  .animate-fade-in {
     animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
   }
 
   html {
@@ -153,84 +123,50 @@ p {
   }
 }
 
-/* Selection */
+/* Selection — pastel pink on ink, everywhere */
 ::selection {
-  background: #4a6741;
-  color: #fafafa;
+  background: #f6a8d8;
+  color: #141319;
 }
 
-/* ── Mediaseed HQ (network homepage) ────────────────────────────────────── */
+/* One focus ring for every control: 2px ink on cream (21:1), cream on ink surfaces */
+.hq-root :is(a, button, [role="button"]):focus-visible {
+  outline: 2px solid #141319;
+  outline-offset: 3px;
+}
 
-/* Iridescent gradient text — the network wordmark treatment */
+.hq-root .bg-hq-ink :is(a, button):focus-visible,
+.hq-root a.bg-hq-ink:focus-visible,
+.hq-root button.bg-hq-ink:focus-visible {
+  outline-color: #faf6f0;
+}
+
+/* ── Studio identity ────────────────────────────────────────────────────── */
+
+/* Iridescent gradient text — the wordmark treatment */
 .hq-grad-text {
-  background: linear-gradient(
-    94deg,
-    #e85da8 0%,
-    #8b72ea 32%,
-    #38b8d8 64%,
-    #ff9a62 100%
-  );
+  background-image: var(--hq-grad);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
-/* Marquee ticker */
-@keyframes hq-marquee {
-  to {
-    transform: translateX(-50%);
+.hq-grad-bg {
+  background-image: var(--hq-grad);
+}
+
+.hq-grad-bg-soft {
+  background-image: var(--hq-grad-soft);
+}
+
+/* Mono uppercase voice: .hq-eyebrow for labels and tags, .hq-meta for data lines */
+@layer components {
+  .hq-eyebrow {
+    @apply font-mono text-[10px] sm:text-[11px] tracking-[0.18em] uppercase text-hq-ink-soft;
   }
-}
 
-.hq-marquee-track {
-  animation: hq-marquee 36s linear infinite;
-  will-change: transform;
-}
-
-.hq-marquee:hover .hq-marquee-track {
-  animation-play-state: paused;
-}
-
-/* Selection inside the HQ homepage flips to pastel pink on ink */
-.hq-root ::selection {
-  background: #f6a8d8;
-  color: #141319;
-}
-
-/* Latest Drops — bubbles bob gently, out of phase via animation-delay */
-@keyframes hq-float {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-9px);
-  }
-}
-
-.hq-bubble {
-  animation: hq-float 7s ease-in-out infinite;
-  will-change: transform;
-}
-
-/* Hide the scrollbar on the drops strip without killing scrollability */
-.hq-drops-scroll {
-  scrollbar-width: none;
-}
-
-.hq-drops-scroll::-webkit-scrollbar {
-  display: none;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .hq-bubble {
-    animation: none;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .hq-marquee-track {
-    animation: none;
+  .hq-meta {
+    @apply font-mono text-[10px] sm:text-[11px] tracking-[0.14em] uppercase text-hq-ink-soft;
   }
 }
 
@@ -247,23 +183,23 @@ p {
   color: #0e0e10;
 }
 
-/* Subtle scrollbar */
+/* Subtle scrollbar on the cream shell */
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #0a0a0a;
+  background: #f3ede4;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1f1f1f;
+  background: rgba(20, 19, 25, 0.2);
   border-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #2a2a2a;
+  background: rgba(20, 19, 25, 0.32);
 }
 
 /* Form inputs reset */
@@ -275,6 +211,5 @@ button {
 
 input:focus-visible,
 textarea:focus-visible {
-  outline: none;
-  border-color: #4a6741;
+  border-color: #8b72ea;
 }

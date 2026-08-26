@@ -8,18 +8,8 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        bg: "#0a0a0a",
-        "bg-elevated": "#111111",
-        fg: "#fafafa",
-        muted: "#8a8a8a",
-        "muted-strong": "#5a5a5a",
-        border: "#1f1f1f",
-        "border-strong": "#2a2a2a",
-        accent: "#4a6741",
-        "accent-hover": "#5a7a51",
-        "accent-deep": "#3d5a3d",
-        // Mediaseed HQ palette — yuruyurau-inspired iridescent pastels on cream.
-        // Scoped via `hq-` prefix; used by the network homepage.
+        // Studio palette — yuruyurau-inspired iridescent pastels on cream.
+        // Scoped via `hq-` prefix.
         "hq-cream": "#FAF6F0",
         "hq-cream-soft": "#F3EDE4",
         "hq-ink": "#141319",
@@ -60,10 +50,23 @@ const config: Config = {
           "0%": { opacity: "0" },
           "100%": { opacity: "1" },
         },
+        "fade-out": {
+          to: { opacity: "0" },
+        },
+        "modal-in": {
+          "0%": { opacity: "0", transform: "translateY(24px) scale(0.98)" },
+          "100%": { opacity: "1", transform: "translateY(0) scale(1)" },
+        },
+        "modal-out": {
+          to: { opacity: "0", transform: "translateY(16px) scale(0.98)" },
+        },
       },
       animation: {
         "fade-up": "fade-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards",
         "fade-in": "fade-in 0.5s ease-out forwards",
+        "fade-out": "fade-out 0.22s ease-out both",
+        "modal-in": "modal-in 0.34s cubic-bezier(0.22, 1, 0.36, 1) both",
+        "modal-out": "modal-out 0.22s cubic-bezier(0.4, 0, 1, 1) both",
       },
     },
   },
