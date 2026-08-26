@@ -42,11 +42,12 @@ const games = [
     to: "#8B72EA",
   },
   {
-    name: "CTF",
-    tag: "Browser · Coming soon",
-    blurb: "The next game, in final polish now. Watch this space.",
-    href: "",
-    linkLabel: "",
+    name: "Backyard",
+    tag: "Browser · Free · vs bots",
+    blurb:
+      "Gym-class capture the flag, three on three. Free movement worth mastering, eight backyards to fight over, and a whole street of kids to unlock.",
+    href: "/ctf",
+    linkLabel: "Play Backyard",
     from: "#FF9A62",
     to: "#E85DA8",
   },
