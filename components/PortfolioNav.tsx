@@ -128,7 +128,7 @@ export function PortfolioNav() {
             </a>
           </nav>
           <div className="mt-auto pt-8 font-mono text-xs text-hq-ink-soft">
-            jaxonkale124@gmail.com · Athens, GA · open to remote
+            jaxonkale124@gmail.com
           </div>
         </div>
       </div>
