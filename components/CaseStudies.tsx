@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowUpRight, X, Clapperboard } from "lucide-react";
+import { ArrowUpRight, X, Briefcase } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
 import { CountUp } from "@/components/CountUp";
 
@@ -51,17 +51,17 @@ const caseStudies: CaseStudy[] = [
   },
   {
     key: "viewfinders",
-    client: "Viewfinders",
+    client: "View Finders",
     period: "2024 – present",
     mark: { type: "text", text: "PBS" },
     markLabel: "broadcast post-production.",
     summary:
-      "VFX and motion graphics for Viewfinders, the PBS series from Chris Greer Media, plus the show's social presence. Started as the post-production intern; never left.",
+      "VFX and motion graphics for View Finders, the PBS series from Chris Greer Media, plus the show's social presence.",
     tags: ["VFX", "Motion graphics", "Broadcast", "Social"],
     article: [
       {
         h: "The show",
-        p: "Viewfinders is a series made by Chris Greer Media for PBS, starring Chris Greer. Broadcast is a different discipline from social: shots are scrutinized on big screens, graphics have to survive compression and broadcast standards, and deadlines are air dates.",
+        p: "View Finders is a series made by Chris Greer Media for PBS, starring Chris Greer. Broadcast is a different discipline from social: shots are scrutinized on big screens, graphics have to survive compression and broadcast standards, and deadlines are air dates.",
       },
       {
         h: "My role",
@@ -87,7 +87,7 @@ const caseStudies: CaseStudy[] = [
     article: [
       {
         h: "The work",
-        p: "Alongside Viewfinders, Chris Greer Media runs a client practice: campaigns for local businesses, brand films, and independent projects. I handle the motion side: logo animations, animated graphics, and title work that gives small-business campaigns a finish they could not get anywhere else in town.",
+        p: "Alongside View Finders, Chris Greer Media runs a client practice: campaigns for local businesses, brand films, and independent projects. I handle the motion side: logo animations, animated graphics, and title work that gives small-business campaigns a finish they could not get anywhere else in town.",
       },
       {
         h: "Logo animations",
@@ -192,12 +192,11 @@ export function CaseStudies() {
       <div className="mx-auto max-w-content">
         <Reveal>
           <div className="hq-eyebrow mb-4 flex items-center gap-3">
-            <Clapperboard size={13} className="text-hq-pink-deep" />
+            <Briefcase size={13} className="text-hq-pink-deep" />
             Case studies
           </div>
           <h2 className="text-[clamp(2rem,7vw,3.75rem)] font-medium tracking-tightest leading-[1.02] max-w-2xl">
-            Real clients.
-            <span className="text-hq-ink-soft"> Real numbers.</span>
+            Experience
           </h2>
         </Reveal>
 

@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://www.mediaseed.io"),
   title: "Jax Cannon | media producer & AI-native builder",
   description:
-    "Video, motion graphics, and social content, plus shipped software. 1M+ organic views for a 7-location medical practice, PBS post-production credits, two App Store apps, and two browser games.",
+    "Video, motion graphics, and social content, plus shipped software. 1M+ organic views for a 7-location medical practice, PBS post-production credits, two App Store apps, and three browser games.",
   keywords: [
     "Jax Cannon",
     "media producer",
@@ -31,13 +31,13 @@ export const metadata: Metadata = {
     siteName: "Jax Cannon | mediaseed",
     title: "Jax Cannon | media producer & AI-native builder",
     description:
-      "Video, motion graphics, and social content, plus shipped software. 1M+ organic views, PBS credits, two App Store apps, two browser games.",
+      "Video, motion graphics, and social content, plus shipped software. 1M+ organic views, PBS credits, two App Store apps, three browser games.",
   },
   twitter: {
     card: "summary_large_image",
     title: "Jax Cannon | media producer & AI-native builder",
     description:
-      "Video, motion, social, and shipped software. 1M+ organic views, PBS credits, 4 shipped projects.",
+      "Video, motion, social, and shipped software. 1M+ organic views, PBS credits, 5 shipped projects.",
     creator: "@mediaseed",
   },
   robots: {

@@ -13,7 +13,6 @@ import { PortfolioNav } from "@/components/PortfolioNav";
 import { CaseStudies } from "@/components/CaseStudies";
 import { Particles } from "@/components/hq/Particles";
 import { Reveal } from "@/components/Reveal";
-import { CountUp } from "@/components/CountUp";
 import { MagneticButton } from "@/components/MagneticButton";
 
 export const viewport: Viewport = {
@@ -82,7 +81,7 @@ const experience = [
   },
   {
     role: "Motion Graphics & Post-Production",
-    org: "Chris Greer Media · Viewfinders on PBS",
+    org: "Chris Greer Media · View Finders on PBS",
     dates: "2024 – Present",
   },
   {
@@ -129,12 +128,7 @@ export default function Page() {
           <Particles className="absolute inset-0 h-full w-full" />
 
           <div className="relative mx-auto w-full max-w-content px-5 sm:px-6 md:px-10 pt-24 pb-10 text-center">
-            <div className="inline-flex items-center gap-2.5 rounded-full border border-hq-ink/15 bg-hq-cream/70 backdrop-blur-sm px-4 py-2 hq-eyebrow animate-fade-in">
-              <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full hq-grad-bg" />
-              Athens, GA · open to remote
-            </div>
-
-            <h1 className="mt-6 sm:mt-8 font-medium tracking-tightest leading-[0.92] text-[clamp(3rem,13vw,9.5rem)] animate-fade-up">
+            <h1 className="font-medium tracking-tightest leading-[0.92] text-[clamp(3rem,13vw,9.5rem)] animate-fade-up">
               <span className="hq-grad-text">Jax Cannon</span>
             </h1>
 
@@ -179,21 +173,6 @@ export default function Page() {
               </MagneticButton>
             </div>
 
-            <div
-              className="mt-14 sm:mt-20 hq-meta text-hq-ink-soft/80 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 animate-fade-in"
-              style={{ animationDelay: "360ms", animationFillMode: "both", opacity: 0 }}
-            >
-              <span>
-                <CountUp to={1000000} decimals={0} suffix="+" className="text-hq-ink" />{" "}
-                organic views
-              </span>
-              <span aria-hidden="true" className="h-1 w-1 rounded-full bg-hq-ink/25" />
-              <span>PBS credits</span>
-              <span aria-hidden="true" className="h-1 w-1 rounded-full bg-hq-ink/25" />
-              <span>4 shipped projects</span>
-              <span aria-hidden="true" className="h-1 w-1 rounded-full bg-hq-ink/25" />
-              <span>Zero ad spend</span>
-            </div>
           </div>
         </section>
 
@@ -422,10 +401,10 @@ export default function Page() {
                 <p className="text-base md:text-lg text-hq-ink-soft leading-relaxed">
                   I&apos;m Jax Cannon, 24, based in Athens, Georgia. I studied
                   Entertainment &amp; Media Studies at UGA, cut my teeth in TV
-                  post-production, then ran the entire digital presence for a
-                  7-location surgical practice by myself. Along the way I
+                  post-production, then spent a year and a half running
+                  digital for a 7-location surgical practice. Along the way I
                   started building and shipping software with frontier AI
-                  models. Two iOS apps, two browser games, PBS credits,
+                  models. Two iOS apps, three browser games, PBS credits,
                   a million organic views.
                 </p>
                 <p className="mt-5 text-base md:text-lg text-hq-ink-soft leading-relaxed">

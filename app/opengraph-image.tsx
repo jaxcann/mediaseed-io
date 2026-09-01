@@ -44,7 +44,7 @@ export default function OpengraphImage() {
           Jax Cannon
         </div>
         <div style={{ fontSize: 26, color: "#3A3844" }}>
-          1M+ organic views · PBS credits · 4 shipped projects
+          1M+ organic views · PBS credits · 5 shipped projects
         </div>
       </div>
     ),
