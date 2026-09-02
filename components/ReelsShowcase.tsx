@@ -52,7 +52,8 @@ function PlaceholderScreen({ reel, compact = false }: { reel: Reel; compact?: bo
       />
       {!compact && (
         <div className="hq-eyebrow">
-          {reel.client} · {reel.date}
+          {reel.client}
+          {reel.date ? ` · ${reel.date}` : ""}
         </div>
       )}
       <div
@@ -413,16 +414,20 @@ function ReelsPhone({
             {active ? (
               <div key={active.id} className="animate-fade-in motion-reduce:animate-none">
                 <div className="hq-eyebrow text-hq-cream/70 md:text-hq-ink-soft">
-                  {active.client} · {active.date}
+                  {active.client}
+                  {active.date ? ` · ${active.date}` : ""}
                 </div>
                 <h3
                   className="mt-2 text-xl font-medium tracking-tightest leading-[1.05] md:mt-3 md:text-[clamp(1.5rem,2.6vw,2.125rem)]"
                 >
                   {active.title}
                 </h3>
-                <p className="hidden md:block mt-4 text-base text-hq-ink-soft leading-relaxed">
-                  {active.description}
-                </p>
+                {active.description && (
+                  <p className="hidden md:block mt-4 text-base text-hq-ink-soft leading-relaxed">
+                    {active.description}
+                  </p>
+                )}
+                {active.views > 0 && (
                 <div className="mt-3 flex items-baseline gap-3 md:mt-7">
                   <div className="hq-grad-text text-4xl font-medium tracking-tightest leading-none py-[0.16em] -my-[0.16em] md:text-[clamp(3rem,5vw,4.5rem)]">
                     <CountUp
@@ -435,6 +440,7 @@ function ReelsPhone({
                     views
                   </span>
                 </div>
+                )}
                 {active.url && (
                   <a
                     href={active.url}

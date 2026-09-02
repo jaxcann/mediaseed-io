@@ -24,4 +24,17 @@ export type Reel = {
   date: string;
 };
 
-export const reels: Reel[] = [];
+export const reels: Reel[] = [
+  {
+    id: "vf-lemurs",
+    client: "View Finders",
+    title: "Photographing Lemurs in Necker Island",
+    description: "",
+    views: 0,
+    platform: "Instagram",
+    url: "",
+    src: "/media/reels/lemurs.mp4",
+    poster: "/media/reels/lemurs.jpg",
+    date: "",
+  },
+];

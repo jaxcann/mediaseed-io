@@ -27,12 +27,22 @@ export type MotionClip = {
   webm?: string;
   mov?: string;
   poster?: string;
+  /** dark: ink glass plate, for white or light logos that would vanish on cream */
+  tone?: "light" | "dark";
 };
 
 // Fill the paths and the rail appears. Suggested layout:
 //   public/media/motion/<id>.webm, <id>.mov, <id>.png
 export const motionClips: MotionClip[] = [
-  { id: "logo-01", title: "Logo animation 01", client: "Client", webm: "", mov: "", poster: "" },
+  {
+    id: "oconee",
+    title: "Visit Oconee County",
+    client: "Logo animation",
+    webm: "/media/motion/oconee.webm",
+    mov: "/media/motion/oconee.mov",
+    poster: "/media/motion/oconee.png",
+    tone: "dark",
+  },
   { id: "logo-02", title: "Logo animation 02", client: "Client", webm: "", mov: "", poster: "" },
   { id: "logo-03", title: "Logo animation 03", client: "Client", webm: "", mov: "", poster: "" },
   { id: "logo-04", title: "Logo animation 04", client: "Client", webm: "", mov: "", poster: "" },
@@ -133,7 +143,11 @@ function Plate({
       onFocus={(e) => {
         if (e.target === e.currentTarget) onFocus(e.currentTarget);
       }}
-      className="group relative shrink-0 snap-start w-[calc(100vw-3.75rem)] sm:w-80 md:w-96 overflow-hidden rounded-2xl border-2 border-hq-ink/10 bg-white/60 outline-none transition-[transform,box-shadow,border-color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:border-hq-ink/30 hover:shadow-[0_18px_50px_rgba(20,19,25,0.12)] focus-visible:outline-2 focus-visible:outline-hq-ink focus-visible:outline-offset-[3px]"
+      className={`group relative shrink-0 snap-start w-[calc(100vw-3.75rem)] sm:w-80 md:w-96 overflow-hidden rounded-2xl border-2 outline-none ${
+        clip.tone === "dark"
+          ? "border-white/10 bg-hq-ink hover:border-white/25"
+          : "border-hq-ink/10 bg-white/60 hover:border-hq-ink/30"
+      } transition-[transform,box-shadow,border-color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:shadow-[0_18px_50px_rgba(20,19,25,0.12)] focus-visible:outline-2 focus-visible:outline-hq-ink focus-visible:outline-offset-[3px]`}
     >
       {/* Glass: the brand gradient as a faint tint, plus a white glint from the top left. */}
       <div
@@ -195,8 +209,13 @@ function Plate({
           )}
         </div>
 
-        <figcaption id={`${clip.id}-cap`} className="hq-meta flex items-baseline justify-between gap-4 border-t border-hq-ink/10 px-4 py-3">
-          <span className="truncate text-hq-ink">{clip.title}</span>
+        <figcaption
+          id={`${clip.id}-cap`}
+          className={`hq-meta flex items-baseline justify-between gap-4 border-t px-4 py-3 ${
+            clip.tone === "dark" ? "border-white/10 text-hq-cream/60" : "border-hq-ink/10"
+          }`}
+        >
+          <span className={`truncate ${clip.tone === "dark" ? "text-hq-cream" : "text-hq-ink"}`}>{clip.title}</span>
           <span className="shrink-0">{clip.client}</span>
         </figcaption>
       </figure>
