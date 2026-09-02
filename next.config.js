@@ -1,5 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  images: {
+    // A candidate near the 2x need of the 1200px feature card, and no 3840 rung.
+    deviceSizes: [640, 750, 828, 1080, 1200, 1600, 1920, 2400],
+  },
   reactStrictMode: true,
   async rewrites() {
     return [
