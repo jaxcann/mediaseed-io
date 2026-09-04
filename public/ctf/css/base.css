@@ -1,0 +1,54 @@
+/* ── base: the page, the HUD layer, and the guard rules ──────
+   Everything visual comes from tokens.css. This file owns the document,
+   the stacking order, and which surfaces are allowed on screen per mode.  */
+
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;background:var(--sky);
+  font-family:Fredoka,system-ui,sans-serif;user-select:none;-webkit-user-select:none}
+#c{display:block;width:100%;height:100%;cursor:crosshair}
+.hud{position:fixed;inset:0;pointer-events:none;color:var(--cream)}
+
+/* keyboard players get a visible ring on every control */
+:focus-visible{outline:none;box-shadow:var(--focus)}
+
+/* ── the guard: which surfaces exist in which mode ──
+   The end card hides the live HUD in every mode (body.over is derived once
+   per frame), so no mode needs its own removal site any more. */
+body.lobby #score,body.lobby #meter,body.lobby #hint,body.lobby #toasts,body.lobby #stamp,body.lobby #xhair{display:none!important}
+body.title #score,body.title #meter,body.title #hint,body.title #toasts,body.title #stamp,body.title #xhair,
+body.title #kbhud,body.title #fthud,body.title #gear{display:none!important}
+body.story #score,body.story #meter,body.story #hint,body.story #toasts,body.story #stamp,body.story #xhair,
+body.story #kbhud,body.story #fthud{display:none!important}
+body.kb #score,body.kb #meter,body.kb #hint{display:none!important}
+body.ft #score,body.ft #meter,body.ft #hint{display:none!important}
+body.over #score,body.over #meter,body.over #hint,body.over #toasts,body.over #xhair,
+body.over #kbhud,body.over #fthud,body.over #objective,body.over #replay{display:none!important}
+
+#xhair{position:absolute;left:50%;top:50%;width:22px;height:22px;margin:-11px 0 0 -11px;display:none;
+  border:var(--bd) solid var(--cream);border-radius:50%;
+  box-shadow:0 0 0 2px var(--ink),inset 0 0 0 2px var(--ink)}
+#xhair::after{content:'';position:absolute;left:50%;top:50%;width:4px;height:4px;margin:-2px 0 0 -2px;
+  background:var(--yellow);border-radius:50%}
+
+#gear{position:absolute;top:var(--hud-top);right:var(--hud-side);pointer-events:auto;
+  width:46px;height:46px;display:grid;place-items:center;font-size:22px;font-family:inherit;
+  color:var(--ink);background:var(--cream);border:var(--bd) solid var(--ink);
+  border-radius:var(--r-card);box-shadow:var(--sh-card);z-index:var(--z-gear)}
+#gear:hover{transform:rotate(20deg)}
+#gear:active{transform:rotate(20deg) translateY(2px);box-shadow:var(--sh-press)}
+
+/* Stacking order. There was none, so #gear and #settings — declared earlier in
+   the document than the story screens — painted behind them, and Escape during
+   story mode toggled an invisible panel. */
+.storyscreen{z-index:var(--z-screen)}
+#settings{z-index:var(--z-settings)}
+#respawn{z-index:var(--z-respawn)}
+
+/* Motion is decoration everywhere except the idle loops that carry meaning
+   (a loose flag, the current map pin, the REC dot). Those keep blinking. */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;
+    transition-duration:.01ms!important;scroll-behavior:auto!important}
+  .flagdot.loose,.flagdot.taken,#replay .rec,.swpin.current .swflag,#carry.on{
+    animation-duration:1.2s!important;animation-iteration-count:infinite!important}
+}

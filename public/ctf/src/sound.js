@@ -102,6 +102,31 @@ export function makeSound() {
     hose(v = 1)   { if (!ensure()) return; const t = now();
                     whoosh(t, 0.55, 0.42 * v, 2600, 900, 0.7);
                     tone(180, 'sine', t, 0.02, 0.4, 0.14 * v, 120); },
+    // ── football ──
+    whistle(v = 1) { if (!ensure()) return; const t = now();
+      // pea whistle: two beats of a shrill warble
+      for (const [dt2, dur] of [[0, 0.28]]) {
+        const o = ctx.createOscillator(); o.type = 'square'; o.frequency.value = 2350;
+        const lfo = ctx.createOscillator(); lfo.frequency.value = 38;
+        const lg = ctx.createGain(); lg.gain.value = 260;
+        lfo.connect(lg); lg.connect(o.frequency);
+        env(o, t + dt2, 0.008, dur, 0.34 * v, 0, 0.05);   // env wires o -> gain -> master
+        o.start(t + dt2); o.stop(t + dt2 + dur + 0.1);
+        lfo.start(t + dt2); lfo.stop(t + dt2 + dur + 0.1);
+      } },
+    hut(v = 1)     { if (!ensure()) return; const t = now();
+      tone(190, 'square', t, 0.004, 0.09, 0.5 * v, 120);
+      whoosh(t, 0.07, 0.2 * v, 700, 350, 1.5); },
+    snagBall(v = 1){ if (!ensure()) return; const t = now();
+      tone(120, 'sine', t, 0.003, 0.12, 0.7 * v, 70);
+      whoosh(t, 0.08, 0.35 * v, 1100, 400, 0.8); },
+    spiral(v = 1)  { if (!ensure()) return; whoosh(now(), 0.5, 0.22 * v, 500, 2100, 1.3); },
+    tdHorn(v = 1)  { if (!ensure()) return; const t = now();
+      // an air-horn triad and a crowd-ish rush of noise
+      [262, 330, 392].forEach(f => tone(f, 'sawtooth', t, 0.02, 0.7, 0.22 * v));
+      tone(523, 'sawtooth', t + 0.18, 0.02, 0.6, 0.2 * v);
+      whoosh(t + 0.05, 1.0, 0.28 * v, 900, 2600, 0.35); },
+
     // Match end: a real full-stop, distinct from the mid-match score jingle.
     gameover(win = true) { if (!ensure()) return; const t = now();
       const seq = win ? [523, 659, 784, 1046] : [392, 370, 349, 330];

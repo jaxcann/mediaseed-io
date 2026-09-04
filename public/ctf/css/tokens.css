@@ -1,0 +1,306 @@
+/* css/tokens.css — BACKYARD. Loaded first. Every surface file reads from here; none writes here.
+   Contract: no hex outside :root · every font-size a --t- token · every radius an --r- token ·
+   every shadow a --sh-, --drop-, --halo, --ring or --focus token · no transform on a HUD container ·
+   opacity only for enter/exit animation and blink loops · !important only in the guard and
+   reduced-motion blocks.
+   (Written without a star-slash pair anywhere inside: the original header used --sh-*<slash> and
+   closed this comment early, which swallowed the whole :root block and silently disabled every
+   token in the game.) */
+
+:root{
+  /* ── ink & paper ── */
+  --ink:#2a1a12;            /* borders, strokes, display text on cream */
+  --ink-2:#5a4638;          /* secondary text on cream (8.5:1) */
+  --ink-3:#7a6656;          /* eyebrows / helper on cream (5.2:1) */
+  --cream:#fff8ea;          /* card paper, light text on ink */
+  --cream-2:#d9cbb4;        /* secondary on ink (9.8:1) */
+  --cream-3:#b3a48e;        /* eyebrow / helper on ink (6.4:1) */
+  --white:#fff;             /* halo ring, keycap face, input focus */
+  --paper:#f2e8d4;          /* inset wells: bar troughs, idle pips, disabled fills */
+  --sky:#bfe3ff;            /* page ground behind the canvas */
+  --map-grass:#86c65a;      /* story map fill (the one allowed art colour) */
+
+  /* ── accents (one each) ── */
+  --yellow:#ffd94a;         /* yours / selected / go / now */
+  --gold:#c98a00;           /* yellow-as-text on cream (stars, elo, slider accent) */
+  --green:#9fe870;          /* good fill on ink (perfect band, cleared pin, elo up) */
+  --green-ink:#2f7a2f;      /* good text on cream */
+  --orange:#ff9c3d;         /* mid-action / busy (winding, airborne) */
+  --red:#ff4d4d;            /* bad fill, team red fill, rec dot */
+  --red-ink:#c62d2d;        /* bad text on cream, team red on cream */
+  --red-soft:#ff8f8f;       /* team red on ink, lost ribbon */
+  --mute:#9aa4b2;           /* whiff / no-op callouts (sim colour 0x9aa4b2) */
+  /* register-native aliases — naming only, same values, use either, never redefine */
+  --c-sun:var(--yellow); --c-sun-deep:var(--gold); --c-grass:var(--green); --c-grass-deep:var(--green-ink);
+  --c-heat:var(--orange); --c-alarm:var(--red); --c-alarm-deep:var(--red-ink); --c-mist:var(--mute);
+
+  /* ── teams: fill (stroked display, dots) · ink (on cream) · soft (on ink) ── */
+  --blue:#3d7dff; --blue-ink:#2f5fb3; --blue-soft:#7dabff;
+  --team-red:var(--red); --team-red-ink:var(--red-ink); --team-red-soft:var(--red-soft);
+
+  /* ── alpha inks (only these) ── */
+  --ink-a06:rgba(42,26,18,.06);   /* row tint on cream */
+  --ink-a15:rgba(42,26,18,.15);   /* dividers, bar trough, empty stat cell */
+  --ink-a35:rgba(42,26,18,.35);   /* THE drop shadow */
+  --ink-a42:rgba(42,26,18,.42);   /* hero drop shadow */
+  --ink-a50:rgba(42,26,18,.5);    /* drop under ink cards (never black) */
+  --cream-a22:rgba(255,248,234,.22);  /* trough on ink */
+  --cream-a45:rgba(255,248,234,.45);  /* ghost border on dark */
+
+  /* ── grounds ── */
+  --dim:rgba(24,18,12,.55);
+  --dim-deep:rgba(24,18,12,.82);
+  --scrim:radial-gradient(ellipse at 50% 42%,rgba(24,18,12,.36) 0%,rgba(24,18,12,.74) 58%,rgba(24,18,12,.9) 100%);
+  --scrim-blur:blur(3px) saturate(1.12);      /* only #gate #queue #pause #over .storyscreen */
+  --draft-scrim:linear-gradient(90deg,rgba(42,26,18,0) 45%,rgba(42,26,18,.55) 72%,rgba(42,26,18,.82) 100%);
+
+  /* ── borders / radius / depth ── */
+  --bd-chip:2px; --bd:3px; --bd-hero:4px;
+  --r-chip:8px; --r-pill:12px; --r-card:16px; --r-hero:22px; --r-round:999px;
+  --halo:0 0 0 3px var(--white);
+  --halo-hero:0 0 0 4px var(--white);
+  --drop-1:0 4px 0 var(--ink-a35);            /* chips, pips, pills */
+  --drop-2:0 6px 0 var(--ink-a35);            /* buttons, tiles, cards */
+  --drop-3:0 12px 0 var(--ink-a42);           /* hero cards */
+  --sh-chip:0 0 0 2px var(--white),0 3px 0 var(--ink-a35);
+  --sh-card:var(--halo),var(--drop-2);
+  --sh-hero:var(--halo-hero),var(--drop-3);
+  --sh-ink:0 5px 0 var(--ink-a50);            /* inverted (ink) cards */
+  --sh-press:var(--halo),0 2px 0 var(--ink-a35);
+  --ring:var(--halo),0 0 0 6px var(--yellow),var(--drop-2);   /* selected */
+  --focus:var(--halo),0 0 0 7px var(--yellow);                 /* :focus-visible */
+
+  /* ── spacing (4 px base) ── */
+  --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s5:24px;--s6:32px;--s7:48px;
+
+  /* ── type scale (Fredoka) — the ONLY sizes allowed ── */
+  --t-eyebrow:12px;   /* uppercase, +2.5px, 700 — label above a number, never a readout */
+  --t-small:14px;     /* helper lines, chip labels, hint band, sub-readouts */
+  --t-body:16px;      /* body copy, list rows, pips, prompts' sub-line */
+  --t-lead:18px;      /* buttons, form values, mode titles, play-card names */
+  --t-h3:20px;        /* panel headings, duty chip, inning glyph */
+  --t-h2:26px;        /* section headings, speaker, DOWN n, football prompt */
+  --t-h1:34px;        /* card titles (PAUSED, STOP CLEARED, BLUE WINS ribbon) */
+  --t-call:36px;      /* callout toasts */
+  --t-score:40px;     /* live score numerals */
+  --t-display:48px;   /* map title, inning card, long stamps */
+  --t-hero:64px;      /* stamps, GO!, final score, respawn digit */
+  --t-giant:96px;     /* countdown digits */
+  --t-logo:clamp(56px,7vw,88px);
+  --t-kitname:clamp(44px,8vw,96px);
+  --track-eyebrow:2.5px; --track-head:3px; --track-btn:1px;
+
+  /* ── HUD anchors (§2) ── */
+  --hud-top:18px; --hud-side:22px; --pill-h:64px;
+  --row-a:var(--hud-top);
+  --row-b:calc(var(--hud-top) + var(--pill-h) + 14px);   /* 96px */
+  --row-c:calc(var(--row-b) + 56px);                     /* 152px */
+  --row-d:30vh; --row-e:50vh; --row-f:66vh;
+  --dock:22px;
+
+  /* ── z-order ── */
+  --z-hudmode:11; --z-band:12; --z-lane:14; --z-stamp:27; --z-screen:20; --z-over:25; --z-pause:26;
+  --z-respawn:30; --z-tune:39; --z-gear:40; --z-settings:41;
+
+  /* ── motion ── */
+  --ease-pop:cubic-bezier(.2,1.6,.4,1);    /* overshoot in */
+  --ease-out:cubic-bezier(.2,.9,.3,1);     /* settle */
+  --ease-in:cubic-bezier(.5,0,.8,.4);      /* leave */
+  --ease-slam:cubic-bezier(.1,1.4,.3,1);   /* stamp: heavy, short overshoot */
+  --d-tap:90ms; --d-quick:160ms; --d-pop:320ms; --d-card:420ms; --d-exit:200ms;
+  --d-hold-call:1.5s; --d-hold-stamp:1.4s; --d-hold-go:.9s; --d-inning:2.1s;
+  --d-over-card:.9s; --d-over-rows:.96s; --d-over-btns:1.3s; --d-over-foot:1.4s;
+  --lift:translateY(-3px) rotate(-1deg);   /* the one hover */
+  --press:translateY(2px);                 /* the one press */
+}
+
+/* ── base ── */
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;background:var(--sky);font-family:Fredoka,system-ui,sans-serif;
+  user-select:none;-webkit-user-select:none}
+#c{display:block;width:100%;height:100%;cursor:crosshair}
+button,input,select{font-family:inherit}
+b,strong{font-weight:700}
+.hud{position:fixed;inset:0;pointer-events:none;color:var(--cream);font-variant-numeric:tabular-nums;
+  --fg:var(--cream);--fg-2:var(--cream-2);--fg-3:var(--cream-3);--ghost:var(--cream-a45)}
+
+/* ── context trio: set the foreground once, text rules only ever say var(--fg-2)/var(--fg-3) ── */
+.paper{--fg:var(--ink);--fg-2:var(--ink-2);--fg-3:var(--ink-3);--ghost:rgba(42,26,18,.4);
+  background:var(--cream);color:var(--ink)}
+.inkcard{--fg:var(--cream);--fg-2:var(--cream-2);--fg-3:var(--cream-3);--ghost:var(--cream-a45);
+  background:var(--ink);color:var(--cream);border:var(--bd) solid var(--cream);border-radius:var(--r-pill);
+  box-shadow:var(--sh-ink)}
+
+/* ── surface tiers ── */
+.card{border:var(--bd) solid var(--ink);border-radius:var(--r-card);box-shadow:var(--sh-card)}
+.card.hero{border-width:var(--bd-hero);border-radius:var(--r-hero);box-shadow:var(--sh-hero)}
+
+/* ── score pill: one recipe, three instances (#score, .fttop, .kbtop carry class="scorepill") ── */
+.scorepill{position:absolute;top:var(--row-a);left:0;right:0;margin:auto;width:max-content;
+  display:flex;align-items:center;gap:var(--s4);height:var(--pill-h);padding:0 22px;white-space:nowrap;
+  background:var(--cream);color:var(--ink);--fg:var(--ink);--fg-2:var(--ink-2);--fg-3:var(--ink-3);
+  border:var(--bd) solid var(--ink);border-radius:20px;box-shadow:var(--sh-card)}
+.scorepill .n,.ftteam,.kbteam{font-size:var(--t-score);font-weight:700;line-height:1;min-width:48px;text-align:center}
+#sBlue,.ftteam.blue,.kbteam.blue{color:var(--blue-ink)}
+#sRed,.ftteam.red,.kbteam.red{color:var(--red-ink)}
+.ftmid,.kbmid{display:flex;flex-direction:column;align-items:center;line-height:1.05;min-width:150px;
+  padding:0 var(--s2);border-left:var(--bd) solid var(--ink-a15);border-right:var(--bd) solid var(--ink-a15)}
+
+/* ── announcer lanes: #toasts (callouts) and #stamp (stamps + countdown). One occupant per lane. ── */
+#toasts,#stamp{position:absolute;left:0;right:0;display:flex;flex-direction:column;align-items:center;pointer-events:none}
+#toasts{top:var(--row-c);gap:6px;z-index:var(--z-lane)}
+#stamp{top:var(--row-d);z-index:var(--z-stamp)}     /* above #over on purpose: the win stamp plays over the dim */
+body.over #stamp{top:12vh}                          /* clears the rising card during the ceremony */
+body:has(#respawn[style*="flex"]) #stamp{top:22vh}
+.toast{font-weight:700;letter-spacing:1.5px;line-height:1.1;color:var(--cream);white-space:nowrap;
+  -webkit-text-stroke:2px var(--ink);paint-order:stroke fill;
+  text-shadow:0 4px 0 var(--ink),0 0 18px var(--ink-a35);
+  animation:popIn var(--d-pop) var(--ease-pop) both,dropOut var(--d-exit) var(--ease-in) var(--d-hold-call) both}
+.toast.call{font-size:var(--t-call)}
+.toast.stamp{font-size:var(--t-hero);letter-spacing:3px;-webkit-text-stroke:3px var(--ink);
+  text-shadow:0 7px 0 var(--ink),0 12px 0 var(--ink-a35);
+  animation:stampIn .36s var(--ease-slam) both,dropOut var(--d-exit) var(--ease-in) var(--d-hold-stamp) both}
+.toast.count{font-size:var(--t-giant);letter-spacing:0;color:var(--yellow);-webkit-text-stroke:4px var(--ink);
+  text-shadow:0 8px 0 var(--ink);animation:countIn .9s var(--ease-pop) both}      /* exit baked in */
+.toast.go{font-size:var(--t-hero);letter-spacing:3px;color:var(--yellow);-webkit-text-stroke:3px var(--ink);
+  text-shadow:0 7px 0 var(--ink);
+  animation:stampIn .36s var(--ease-slam) both,dropOut var(--d-exit) var(--ease-in) var(--d-hold-go) both}
+.toast.long{font-size:var(--t-display);letter-spacing:2px;white-space:normal;max-width:88vw;text-align:center;line-height:1.05}
+.toast.out{animation:dropOut var(--d-quick) var(--ease-in) both}   /* forced exit when the lane is taken; declared last */
+
+/* ── buttons: one family, three fills ── */
+.big,.mode,.ftplay,.pghost,.ghost,#gear,.tile,.ybtn,.rtile,.swpin{cursor:pointer;
+  transition:transform var(--d-tap) var(--ease-out),box-shadow var(--d-tap) var(--ease-out),background var(--d-quick)}
+.big{display:inline-flex;align-items:center;justify-content:center;gap:var(--s2);
+  font-size:var(--t-lead);font-weight:700;letter-spacing:var(--track-btn);line-height:1.1;
+  padding:14px 26px;min-height:52px;color:var(--ink);background:var(--yellow);
+  border:var(--bd) solid var(--ink);border-radius:var(--r-card);box-shadow:var(--sh-card);white-space:nowrap}
+.big.alt{background:var(--cream)}
+.big.small{font-size:var(--t-small);padding:10px 16px;min-height:40px;letter-spacing:2px}
+.pghost,.ghost{background:transparent;color:var(--fg);border:var(--bd) solid var(--ghost);border-radius:var(--r-card);
+  box-shadow:none;font-size:var(--t-small);font-weight:700;letter-spacing:2px;padding:12px 20px;min-height:44px}
+.pghost:hover,.ghost:hover{border-color:var(--fg);background:var(--ink-a06);transform:var(--lift)}
+.big:hover,.mode:not(:disabled):hover,.ftplay:hover,#gear:hover,.ybtn:hover,.rtile:not(.locked):hover{transform:var(--lift)}
+.big:active,.mode:active,.ftplay:active,#gear:active,.pghost:active,.ghost:active,.tile:active,.ybtn:active,.rtile:active{
+  transform:var(--press);box-shadow:var(--sh-press)}
+:is(.big,.mode,.ftplay,.rtile,#mbGo,#btnOnline):disabled{background:var(--paper);color:var(--ink-3);border-color:var(--cream-3);
+  box-shadow:var(--halo);cursor:not-allowed;transform:none;filter:none}
+:is(.big,.mode,.ftplay,.rtile):disabled:hover{transform:none;background:var(--paper)}
+:where(button,input,select,.swpin):focus-visible{outline:none;box-shadow:var(--focus)}
+.big.go{animation:bump .32s var(--ease-pop)}                /* READY confirm beat */
+
+/* ── keycap (white on cream, 2px ink base — reads as a raised key) ── */
+.key,#hint b,#settings .keys b{display:inline-block;min-width:26px;text-align:center;font-size:var(--t-small);font-weight:700;
+  line-height:1.2;padding:2px 8px;border-radius:var(--r-chip);border:var(--bd-chip) solid var(--ink);
+  background:var(--white);color:var(--ink);box-shadow:0 2px 0 var(--ink);vertical-align:1px;margin:0 1px;white-space:nowrap}
+
+/* ── chips: tile numbers, roster slot / STOP n, YOU ARE HERE, opponent kits, map unlock icons, arena label ── */
+.chip,.tile span,.rtile em,.oppk,.swpin u,.swyou b,#mbShot b,#kbinning i{display:inline-block;font-size:var(--t-eyebrow);
+  font-weight:700;letter-spacing:1.5px;line-height:1.3;padding:2px 7px;border-radius:var(--r-chip);
+  border:var(--bd-chip) solid var(--ink);background:var(--cream);color:var(--ink);white-space:nowrap;text-transform:uppercase}
+.chip.yellow,.tile span,.swpin u,.swyou b{background:var(--yellow)}
+.chip.ink,.rtile em,#mbShot b{background:var(--ink);color:var(--yellow);border-color:var(--ink)}
+.oppk{text-transform:none;font-size:var(--t-small);letter-spacing:.5px;background:var(--paper);border-color:var(--ink-a15)}
+
+/* ── bars: one trough, five instances; stat pips reuse it as 5 cells ── */
+.bar,#track,#kbpbar,#srProgBar,#rpbar{position:relative;height:16px;overflow:hidden;border-radius:var(--r-round);
+  background:var(--paper);border:var(--bd-chip) solid var(--ink);box-shadow:inset 0 2px 0 var(--ink-a15)}
+.bar>*,#spd,#kbpower,#srProgBar i,#rpbar i{display:block;height:100%;width:0;border-radius:var(--r-round);background:var(--yellow)}
+.bar.onink,#kbpbar,#rpbar{background:var(--cream-a22);border-color:var(--cream);box-shadow:none}
+.stats em{display:flex;gap:3px;height:16px;padding:2px;width:110px;border-radius:var(--r-round);
+  border:var(--bd-chip) solid var(--ink);background:var(--cream)}
+.stats em i,.stats em b{flex:1;border-radius:var(--r-round);background:var(--yellow)}
+.stats em b{background:var(--ink-a15)}
+
+/* ── prompt chip (yellow = "press this now") and banner (ink = "what the game is doing") ── */
+.prompt,#ftPrompt,#kbduty{background:var(--yellow);color:var(--ink);border:var(--bd) solid var(--ink);border-radius:var(--r-pill);
+  padding:8px 20px;font-weight:700;letter-spacing:2px;text-transform:uppercase;white-space:nowrap;box-shadow:var(--sh-card);
+  animation:popIn var(--d-pop) var(--ease-pop) both}
+.banner,#objective,#replay,#ftHint,.kbrow{display:flex;align-items:center;gap:var(--s3);padding:8px 16px;
+  font-size:var(--t-body);font-weight:700;letter-spacing:1.5px;white-space:nowrap;animation:riseIn var(--d-pop) var(--ease-out) both}
+
+/* ── eyebrow: every uppercase tracked label in the game ── */
+.eyebrow,#meter .lbl,.stats span,#special .sphead,#board h3,.mbcol h3,.mbfacts span,.mbopp span,#srStop,#srStats span,
+.statstrip span,#srProgTxt,.newkid b,#respawn b,#respawn span,.swhead i,.schint,.schead i,#bigThe,#objective b,#replay .rhint,
+#readyName,#kbinning i,.flagdot::after{
+  font-size:var(--t-eyebrow);font-weight:700;letter-spacing:var(--track-eyebrow);text-transform:uppercase;line-height:1.2;color:var(--fg-3)}
+#special .sphead b,#respawn b,#objective b,#scWhere{color:var(--yellow)}
+
+/* ── helper: the one quiet line under a panel ── */
+.helper,.keys,#yardnote,#pauseNote,.tag,#me,.unranked,#story-result p,.mbcol>i,#over .keys{
+  font-size:var(--t-small);font-weight:600;letter-spacing:.5px;text-align:center;font-style:normal;color:var(--fg-2)}
+
+/* ── headings ── */
+.stroked,.logo,#bigName,.swhead h1,#queue h2{-webkit-text-stroke:3px var(--ink);paint-order:stroke fill;text-shadow:0 6px 0 var(--ink)}
+.logo,#bigName{-webkit-text-stroke:4px var(--ink);text-shadow:0 7px 0 var(--ink),0 12px 0 var(--ink-a35)}
+
+/* ── dividers: one recipe ── */
+.rule,.mbfacts div,#srStats,.statstrip,table.box td.tot,#scDir{border-color:var(--ink-a15)}
+.mbfacts div{border-bottom:2px dotted var(--ink-a15)}
+#srStats,.statstrip{border-top:2px dashed var(--ink-a15)}
+#srStats div+div,.statstrip div+div,table.box td.tot{border-left:2px solid var(--ink-a15)}
+
+/* ── ribbon card: #overCard and #srCard are literally this one component ── */
+.ribboncard{position:relative;width:min(92vw,560px);padding:0 var(--s5) var(--s5);text-align:center;
+  display:flex;flex-direction:column;gap:var(--s3);animation:cardIn var(--d-card) var(--ease-pop) both}
+.ribboncard .ribbon{margin:-28px -12px 0;padding:10px 0 12px;background:var(--yellow);
+  border:var(--bd-hero) solid var(--ink);border-radius:var(--r-card);box-shadow:var(--drop-1);
+  animation:ribbonIn .36s var(--ease-slam) .15s both}
+.ribboncard .ribbon.lost{background:var(--red-soft)}
+.ribboncard .ribbon.blue{background:var(--blue)} .ribboncard .ribbon.red{background:var(--red)} .ribboncard .ribbon.draw{background:var(--cream)}
+.ribboncard h1{font-size:var(--t-h1);letter-spacing:var(--track-head);color:var(--ink);text-shadow:none;-webkit-text-stroke:0;margin:0}
+.ribboncard .ribbon:is(.blue,.red) h1{color:var(--cream);-webkit-text-stroke:2px var(--ink);paint-order:stroke fill;text-shadow:0 3px 0 var(--ink)}
+.finalscore{display:flex;align-items:center;justify-content:center;gap:var(--s3)}
+.finalscore b{font-size:var(--t-hero);line-height:1;min-width:72px;font-weight:700}
+.finalscore b.blue{color:var(--blue-ink)} .finalscore b.red{color:var(--red-ink)}
+.finalscore b.win{color:var(--green-ink)} .finalscore b.lose{color:var(--ink-3)}
+.finalscore i{font-size:var(--t-h1);font-style:normal;color:var(--ink-a15)}
+.statstrip,#srStats{display:flex;justify-content:center;padding-top:12px;margin-top:6px}
+.statstrip div,#srStats div{flex:1;display:flex;flex-direction:column;gap:2px}
+.statstrip b,#srStats b{font-size:var(--t-h2);font-weight:700}
+
+/* ── state helpers ── */
+.bump{display:inline-block;animation:bump .32s var(--ease-pop)}       /* JS re-triggers via reflow */
+.leaving{animation:fadeOut var(--d-exit) var(--ease-in) both;pointer-events:none}
+.ftmid{transition:background .4s var(--ease-out)} .ftmid.flash{background:var(--yellow)}   /* first-down / turnover flash, 400ms via JS */
+
+/* ── mode guards: the contract, kept here so no surface file can disagree ── */
+body.title :is(#score,#meter,#hint,#toasts,#stamp,#xhair,#kbhud,#fthud,#gear,#objective,#replay,#respawn){display:none!important}
+body.lobby :is(#score,#meter,#hint,#toasts,#stamp,#xhair,#objective,#replay,#respawn){display:none!important}
+body.story :is(#score,#meter,#hint,#toasts,#stamp,#xhair,#kbhud,#fthud,#objective,#replay,#respawn){display:none!important}
+body.kb :is(#score,#meter,#hint){display:none!important}
+body.ft :is(#score,#meter,#hint){display:none!important}
+body.over :is(#score,#meter,#hint,#toasts,#objective,#replay,#respawn,#fthud,#kbhud,#xhair){display:none!important}
+
+/* ── keyframes: the complete set. Nothing else may be declared in any surface file. ── */
+@keyframes popIn     {from{transform:scale(.6) translateY(-10px);opacity:0}}
+@keyframes popOut    {to{transform:scale(.8);opacity:0}}
+@keyframes riseIn    {from{transform:translateY(14px);opacity:0}}
+@keyframes dropOut   {to{transform:translateY(10px);opacity:0}}
+@keyframes dimIn     {from{opacity:0}}
+@keyframes fadeOut   {to{opacity:0}}
+@keyframes stampIn   {0%{transform:scale(1.8) rotate(-9deg);opacity:0} 60%{transform:scale(.96) rotate(-2deg);opacity:1} 100%{transform:scale(1) rotate(-3deg)}}
+@keyframes ribbonIn  {0%{transform:scale(1.6) rotate(-8deg);opacity:0} 60%{transform:scale(.97) rotate(-1deg);opacity:1} 100%{transform:rotate(-2deg)}}
+@keyframes countIn   {0%{transform:scale(1.6);opacity:0} 20%{transform:scale(1);opacity:1} 75%{opacity:1} 100%{transform:scale(.8);opacity:0}}
+@keyframes bump      {40%{transform:scale(1.35)}}
+@keyframes cardIn    {from{transform:translateY(28px) scale(.94);opacity:0}}
+@keyframes rowIn     {from{transform:translateX(-12px);opacity:0}}
+@keyframes readyFlash{0%{transform:scale(1)} 35%{transform:scale(1.18);background:var(--white)} 100%{transform:scale(1)}}
+@keyframes flipDown  {0%{transform:translateY(-100%);opacity:0} 100%{transform:none;opacity:1}}
+@keyframes shakeX    {20%{transform:translateX(-5px)} 40%{transform:translateX(5px)} 60%{transform:translateX(-3px)} 80%{transform:translateX(3px)}}
+@keyframes tick      {50%{opacity:.35}}
+@keyframes blink     {50%{opacity:.25}}
+@keyframes pulseChip {50%{transform:scale(1.08)}}
+@keyframes bob       {50%{transform:translateY(-6px) rotate(-.6deg)}}
+@keyframes whirl     {to{transform:rotate(360deg)}}
+@keyframes caret     {50%{opacity:0}}
+@keyframes holdCard  {0%{opacity:0;transform:scale(.7) rotate(-4deg)} 12%{opacity:1;transform:scale(1.05) rotate(1deg)}
+                      20%{transform:scale(1) rotate(0)} 80%{opacity:1;transform:scale(1)} 100%{opacity:0;transform:scale(.94)}}
+@keyframes pinbob    {50%{transform:rotate(-45deg) translateY(-7px)}}
+@keyframes youbob    {50%{transform:translate(-50%,32px)}}
+
+/* ── reduced motion: everything instant, idle loops off ── */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:1ms!important;animation-iteration-count:1!important;transition-duration:1ms!important}
+  .logo,.swyou,.swpin.current .swflag,#scNext.ready,.flagdot,#replay .rec,#clock.low,#carry.on,#scLine::after{animation:none!important}
+}

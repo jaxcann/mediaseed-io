@@ -1,0 +1,89 @@
+/* ── overlays: pause, settings, and the end of a match ───────
+   The end-of-match screen used to be a bare 74px heading, an elo table and a
+   row of buttons on a dim. Every mode reused it and only the online one had
+   anything to say. It is now one card with a ribbon, a final score, a
+   per-mode subtitle, and a ceremony built entirely from CSS delays — so a
+   rematch pressed mid-sequence cannot race a timer.                        */
+
+/* ── pause ── */
+#pause{position:absolute;inset:0;display:none;align-items:center;justify-content:center;
+  background:var(--dim);backdrop-filter:blur(4px);pointer-events:auto;z-index:var(--z-pause)}
+#pausecard{display:flex;flex-direction:column;gap:var(--s2);align-items:stretch;min-width:290px;
+  padding:26px 28px;text-align:center;animation:cardIn var(--d-card) var(--ease-pop) both}
+#pausecard h1{font-size:var(--t-h1);letter-spacing:var(--track-head)}
+#pauseNote{font-size:var(--t-small);color:var(--ink-3);margin-bottom:var(--s2)}
+
+/* ── settings ── */
+#settings{position:absolute;top:calc(var(--row-a) + 56px);right:var(--hud-side);width:306px;display:none;
+  flex-direction:column;gap:var(--s3);padding:16px 18px;pointer-events:auto;z-index:var(--z-settings);
+  animation:popIn var(--d-pop) var(--ease-pop) both}
+#settings.open{display:flex}
+#settings h3{font-size:var(--t-eyebrow);letter-spacing:var(--track-eyebrow);color:var(--ink-3);
+  text-align:center;margin-bottom:2px}
+#settings label{display:flex;flex-direction:column;gap:5px;font-size:var(--t-small);font-weight:700}
+#settings label.row{flex-direction:row;justify-content:space-between;align-items:center}
+#settings select{font-family:inherit;font-size:var(--t-small);font-weight:600;padding:8px;
+  border-radius:var(--r-chip);border:var(--bd-chip) solid var(--ink);background:var(--white);color:var(--ink)}
+#settings select:focus-visible{outline:none;box-shadow:var(--focus)}
+#settings .keys{font-size:var(--t-eyebrow);letter-spacing:1px;color:var(--ink-3);text-align:center;font-weight:600}
+/* a chunky slider, in register with everything else */
+#settings input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:12px;
+  background:var(--paper);border:var(--bd-chip) solid var(--ink);border-radius:8px;outline:none}
+#settings input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;
+  border-radius:7px;background:var(--yellow);border:var(--bd-chip) solid var(--ink);
+  box-shadow:0 2px 0 var(--ink-a35);cursor:pointer}
+#settings input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:7px;background:var(--yellow);
+  border:var(--bd-chip) solid var(--ink);box-shadow:0 2px 0 var(--ink-a35);cursor:pointer}
+#settings input[type=checkbox]{width:22px;height:22px;accent-color:var(--gold);cursor:pointer}
+
+/* ── the end of a match ── */
+#over{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;
+  gap:var(--s4);pointer-events:auto;z-index:var(--z-over);
+  background:var(--dim-deep);backdrop-filter:var(--scrim-blur);animation:dimIn .4s var(--ease-out) both}
+#overCard{width:min(92vw,520px);padding:0 26px 24px;text-align:center;
+  animation:cardIn var(--d-card) var(--ease-pop) .9s both}
+#overCard .ribbon{margin:-26px -10px 0;padding:10px 0 12px;background:var(--yellow);
+  border:var(--bd-hero) solid var(--ink);border-radius:var(--r-card);box-shadow:0 5px 0 var(--ink-a35);
+  animation:ribbonIn .4s var(--ease-pop) 1.05s both}
+#overCard .ribbon.blue{background:var(--blue);color:var(--cream)}
+#overCard .ribbon.red{background:var(--red);color:var(--cream)}
+#overCard .ribbon.draw{background:var(--paper)}
+#overCard .ribbon h1{font-size:var(--t-h1);letter-spacing:var(--track-head);margin:0}
+#overCard .finalscore b{animation:bump .32s var(--ease-pop) 1.28s both}
+#overSub{min-height:18px;margin-top:2px}
+#elo-table{display:flex;flex-direction:column;gap:6px;text-align:left;margin-top:var(--s3)}
+#elo-table:empty{display:none}
+#elo-table>*{animation:rowIn .3s var(--ease-out) 1.02s both}
+#elo-table>*:nth-child(2){animation-delay:1.08s} #elo-table>*:nth-child(3){animation-delay:1.14s}
+#elo-table>*:nth-child(4){animation-delay:1.2s}  #elo-table>*:nth-child(n+5){animation-delay:1.26s}
+.gbtns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:var(--s4);
+  animation:riseIn .3s var(--ease-out) 1.3s both}
+#over .gbtns{width:100%}
+#over #btnAgain{grid-column:1/-1;font-size:var(--t-h3)}
+#over #btnOverMenu{grid-column:1/-1;justify-self:center}
+#over .keys{font-size:var(--t-small);font-weight:600;color:var(--cream-2);
+  animation:riseIn .3s var(--ease-out) 1.4s both}
+/* the ghost buttons live INSIDE the cream card now, so they are ink-on-paper.
+   Styling them for the dark overlay made MENU invisible on its own card. */
+#overCard .pghost{--fg:var(--ink);--ghost:var(--ink-a35);color:var(--ink);border-color:var(--ink-a35)}
+#overCard .pghost:hover{border-color:var(--ink);background:var(--ink-a06)}
+
+/* ranked rows — on paper now, not a translucent smear on the dim */
+.erow{display:grid;grid-template-columns:1fr auto auto;gap:14px;align-items:center;padding:8px 14px;
+  border-radius:var(--r-pill);background:var(--paper);border:var(--bd-chip) solid var(--ink-a15);
+  font-size:var(--t-body);font-weight:700;color:var(--ink)}
+.erow.blue span{color:var(--blue-ink)} .erow.red span{color:var(--red-ink)}
+.erow b.up{color:var(--green-ink)} .erow b.down{color:var(--red-ink)}
+.erow i{font-style:normal;font-size:var(--t-small);color:var(--ink-3)}
+.unranked{font-size:var(--t-small);color:var(--ink-3);text-align:center}
+
+/* kickball line score */
+table.box{border-collapse:separate;border-spacing:3px;margin:0 auto;padding:10px 14px;
+  font-size:var(--t-body);font-weight:700;background:var(--paper);color:var(--ink);
+  border:var(--bd-chip) solid var(--ink-a15);border-radius:var(--r-pill)}
+table.box th{width:52px;text-align:left;font-size:var(--t-eyebrow);letter-spacing:2px}
+table.box th.blue{color:var(--blue-ink)} table.box th.red{color:var(--red-ink)}
+table.box td{width:28px;text-align:center;color:var(--ink-2)}
+table.box td.tot{font-size:var(--t-lead);color:var(--ink);border-left:2px solid var(--ink-a15);
+  padding-left:8px;width:34px}
+table.box tr:first-child td{font-size:var(--t-eyebrow);color:var(--ink-3)}

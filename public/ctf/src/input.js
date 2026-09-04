@@ -9,13 +9,22 @@ export function makeInput(canvas) {
     keys.add(e.code);
   });
   addEventListener('keyup', e => keys.delete(e.code));
-  addEventListener('blur', () => { keys.clear(); mouse.lDown = false; mouse.rDown = false; });
+  addEventListener('blur', () => { keys.clear(); mouse.lDown = false; mouse.rDown = false; mouse.lUp = mouse.rUp = false; });
 
-  const mouse = { x: innerWidth/2, y: innerHeight/2, lEdge: false, rEdge: false };
+  // Edges AND held state: a charge-and-release mechanic (football's throw)
+  // needs to know the button is still down, and needs the release edge. The
+  // release listener is on the window, not the canvas, so letting go with the
+  // cursor off the play area still counts as a throw rather than sticking on.
+  const mouse = { x: innerWidth/2, y: innerHeight/2, lEdge: false, rEdge: false,
+                  lDown: false, rDown: false, lUp: false, rUp: false };
   canvas.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
   canvas.addEventListener('mousedown', e => {
-    if (e.button === 0) mouse.lEdge = true;
-    if (e.button === 2) mouse.rEdge = true;
+    if (e.button === 0) { mouse.lEdge = true; mouse.lDown = true; }
+    if (e.button === 2) { mouse.rEdge = true; mouse.rDown = true; }
+  });
+  addEventListener('mouseup', e => {
+    if (e.button === 0 && mouse.lDown) { mouse.lDown = false; mouse.lUp = true; }
+    if (e.button === 2 && mouse.rDown) { mouse.rDown = false; mouse.rUp = true; }
   });
   canvas.addEventListener('contextmenu', e => e.preventDefault());
 
@@ -69,8 +78,11 @@ export function makeInput(canvas) {
       prevDash = dash;
       const tapped = new Set(taps);
       taps.clear();
-      mouse.lEdge = false; mouse.rEdge = false;
-      return { dx, dz, dash: dashEdge, primary, special, padAim, pad: !!gp, taps: tapped };
+      const hold = mouse.lDown, holdR = mouse.rDown;
+      const release = mouse.lUp, releaseR = mouse.rUp;
+      mouse.lEdge = false; mouse.rEdge = false; mouse.lUp = false; mouse.rUp = false;
+      return { dx, dz, dash: dashEdge, primary, special, padAim, pad: !!gp, taps: tapped,
+               hold, holdR, release, releaseR, mx: mouse.x, my: mouse.y };
     }
   };
 }

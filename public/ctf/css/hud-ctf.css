@@ -1,0 +1,96 @@
+/* ── CTF in-match HUD ────────────────────────────────────────
+   The score pill, the bottom-left meter, the controls card, and the
+   three one-line banners. Everything structural comes from tokens.css:
+   this file only places things and says what is specific to CTF.      */
+
+/* the clock sits between the two scores, inside the shared pill */
+#clock{font-size:var(--t-h2);font-weight:700;letter-spacing:1px;min-width:84px;text-align:center;color:var(--ink);
+  padding:0 var(--s2);border-left:var(--bd) solid var(--ink-a15);border-right:var(--bd) solid var(--ink-a15)}
+#clock.low{color:var(--red-ink);animation:tick 1s steps(1) infinite}
+
+/* Flag state, legible without a legend. It used to be a coloured dot whose
+   three meanings (home / carried / dropped) all looked the same at a glance. */
+.flagdot{display:flex;flex-direction:column;align-items:center;gap:2px;width:56px;padding:3px 0;
+  font-size:20px;line-height:1;letter-spacing:1px;
+  border:var(--bd-chip) solid transparent;border-radius:var(--r-chip)}
+.flagdot::after{content:'';font-size:9px;font-weight:700;letter-spacing:1.5px}
+.flagdot.blue{color:var(--blue-ink)} .flagdot.red{color:var(--red-ink)}
+.flagdot.home::after{content:'HOME';color:var(--ink-3)}
+/* stolen is louder than dropped, because it is the one you must react to */
+.flagdot.taken{color:var(--ink);background:var(--yellow);border-color:var(--ink);
+  animation:pulseChip .9s var(--ease-out) infinite}
+.flagdot.taken::after{content:'GONE';color:var(--ink)}
+.flagdot.loose{animation:blink .7s steps(1) infinite}
+.flagdot.loose::after{content:'LOOSE';color:var(--red-ink)}
+
+/* one banner row, shared: story objective and the replay bar never coexist */
+#objective,#replay{position:absolute;top:var(--row-b);left:0;right:0;margin:auto;width:max-content;
+  display:none;align-items:center;gap:12px;padding:7px 16px;border-radius:var(--r-pill);z-index:var(--z-band)}
+body.story-match #objective{display:flex}
+#replay.on{display:flex}
+#objective b{font-size:var(--t-eyebrow);letter-spacing:var(--track-eyebrow);color:var(--yellow)}
+#objective span{font-size:var(--t-small);font-weight:600;color:var(--cream)}
+#replay{font-weight:700;letter-spacing:2px;font-size:var(--t-small);color:var(--cream)}
+#replay .rec{color:var(--red);animation:blink 1s steps(1) infinite}
+#replay .rhint{font-size:var(--t-eyebrow);font-weight:500;letter-spacing:.5px;color:var(--cream-3)}
+#rpbar{width:160px;height:8px;background:var(--cream-a22);border-radius:4px;overflow:hidden}
+#rpbar i{display:block;height:100%;width:0;background:var(--yellow)}
+
+/* tagged out: it used to freeze you with nothing on screen saying why */
+#respawn{position:absolute;top:38%;left:0;right:0;margin:auto;width:max-content;display:none;
+  flex-direction:column;align-items:center;gap:2px;text-align:center;padding:14px 30px;
+  border-radius:var(--r-hero);z-index:var(--z-respawn);animation:popIn var(--d-pop) var(--ease-pop) both}
+#respawn b{font-size:var(--t-eyebrow);letter-spacing:var(--track-eyebrow);color:var(--yellow)}
+#respawn i{font-size:var(--t-display);font-style:normal;font-weight:700;line-height:1.05;color:var(--cream)}
+#respawn span{font-size:var(--t-eyebrow);letter-spacing:3px;color:var(--cream-3)}
+
+/* ── the meter ──
+   The DASH pip used to read "D:" — the label was clipped by an overflow:hidden
+   wrapper holding a ::after cooldown fill. The cooldown is now a background
+   sweep on the pip itself, so nothing overflows and nothing is hidden. */
+#meter{position:absolute;left:var(--dock);bottom:var(--dock);width:max-content;min-width:252px;padding:12px 14px}
+#meter .lbl,#spdnum{display:none}          /* the bar IS the readout */
+#track{height:12px;margin-bottom:10px;background:var(--paper);border-radius:8px;overflow:hidden;
+  border:var(--bd-chip) solid var(--ink);box-shadow:0 0 0 2px var(--white)}
+#spd{height:100%;width:0;border-radius:6px;background:var(--green);
+  transition:width .06s linear,background var(--d-quick)}
+#spd.hot{background:linear-gradient(90deg,var(--yellow),var(--orange))}
+#pips{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:0}
+.pip{font-size:var(--t-body);font-weight:700;letter-spacing:1px;padding:7px 10px;min-width:110px;
+  white-space:nowrap;text-align:center;border-radius:var(--r-chip);
+  background:var(--paper);color:var(--ink-3);border:var(--bd) solid var(--cream-3);box-shadow:none;opacity:1;
+  transition:background var(--d-quick),color var(--d-quick),border-color var(--d-quick)}
+.pip.on{background:var(--yellow);color:var(--ink);border-color:var(--ink);box-shadow:var(--halo)}
+.pip.warn{background:var(--orange);color:var(--ink);border-color:var(--ink);box-shadow:var(--halo)}
+.pip.good{background:var(--green);color:var(--ink);border-color:var(--ink);box-shadow:var(--halo)}
+.pip.bad{background:var(--red);color:var(--cream);border-color:var(--ink);box-shadow:var(--halo);animation:shakeX .3s}
+#dashcd{position:relative;overflow:visible;
+  background-image:linear-gradient(var(--yellow),var(--yellow));background-repeat:no-repeat;
+  background-size:calc(var(--p,0) * 100%) 100%;background-color:var(--paper);
+  transition:background-size 80ms linear,color var(--d-quick),border-color var(--d-quick)}
+#dashcd.ready{background-color:var(--yellow);color:var(--ink);border-color:var(--ink);box-shadow:var(--halo)}
+#carry.on{animation:pulseChip .9s var(--ease-out) infinite}
+
+/* ── the controls card ──
+   Five permanent lines of keycaps is a tutorial that never leaves. It tucks
+   itself to a single tab after 8s of play; H toggles it back. JS rewrites the
+   innerHTML for gamepad, so the tab has to be a pseudo-element. */
+#hint{position:absolute;right:var(--dock);bottom:var(--dock);text-align:right;max-width:390px;
+  font-size:var(--t-small);font-weight:600;line-height:2.05;padding:8px 14px 10px;
+  max-height:230px;overflow:hidden;
+  transition:max-height var(--d-pop) var(--ease-out),padding var(--d-pop) var(--ease-out)}
+#hint::before{content:'CONTROLS · H HIDES';display:block;font-size:var(--t-eyebrow);font-weight:700;
+  letter-spacing:var(--track-eyebrow);color:var(--ink-3);line-height:1.7}
+#hint.tucked{max-height:34px;padding-bottom:8px}
+#hint.tucked::before{content:'H — CONTROLS'}
+#hint b{display:inline-block;background:var(--white);color:var(--ink);padding:2px 8px;border-radius:var(--r-chip);
+  border:var(--bd-chip) solid var(--ink);font-weight:700;box-shadow:0 2px 0 var(--ink-a35);margin:0 1px}
+
+/* the live-tuning drawer (dev only) */
+#tune{position:absolute;top:0;left:0;bottom:0;width:314px;overflow-y:auto;z-index:var(--z-tune);
+  background:rgba(18,14,10,.93);padding:16px 18px;transform:translateX(-100%);
+  transition:transform .22s var(--ease-out);pointer-events:auto;font-size:11.5px;color:var(--cream)}
+#tune.open{transform:none}
+#tune label{display:block;margin-bottom:11px}
+#tune span{color:var(--cream-3)} #tune b{float:right;color:var(--yellow)}
+#tune input{width:100%;margin-top:3px;accent-color:var(--yellow)}

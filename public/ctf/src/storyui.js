@@ -1,4 +1,5 @@
 import { makeStory, speakerName, CAST } from './story.js';
+import { leave } from './ui.js';
 import { KITS } from './kits.js';
 import { drawNeighborhood } from './mapart.js';
 
@@ -56,10 +57,12 @@ export function makeStoryUI(handlers) {
     }
     box.appendChild(svg);
 
+    let pinI = 0;
     for (const n of ov.nodes) {
       const pin = document.createElement('button');
       pin.className = `swpin ${n.status}` + (n.current ? ' current' : '');
       pin.style.left = n.x + '%'; pin.style.top = n.y + '%';
+      pin.style.setProperty('--i', pinI++);
       const face = n.status === 'cleared' ? '<em class="stamp">✓</em>'
                  : n.status === 'locked' ? '<em class="lock">🔒</em>'
                  : `<em class="num">${n.n}</em>`;
@@ -203,7 +206,8 @@ export function makeStoryUI(handlers) {
     el('mbValid').textContent = v.ok ? `slot 1 is you — ${KITS[loadout[0]]?.name ?? ''}` : v.reason;
     el('mbValid').className = v.ok ? 'ok' : 'bad';
     el('mbGo').disabled = !v.ok;
-    el('mbGo').textContent = v.ok ? `PLAY — ${story.stop(current).name}` : `PICK ${story.stop(current).pick}`;
+    el('mbGo').textContent = v.ok ? 'PLAY' : `PICK ${story.stop(current).pick}`;
+    el('mbGo').dataset.sub = v.ok ? story.stop(current).name : '';
   }
 
   // ── result ───────────────────────────────────────────────
@@ -267,6 +271,12 @@ export function makeStoryUI(handlers) {
   function show(id) {
     for (const s of ['story-world', 'story-scene', 'story-brief', 'story-result']) {
       const node = el(s);
+      // the outgoing screen plays a short exit instead of blinking away
+      if (s !== id && s === shownId && node.style.display !== 'none') {
+        node.classList.remove('entering');
+        leave(node, () => { if (shownId !== s) node.style.display = 'none'; });
+        continue;
+      }
       node.style.display = s === id ? 'flex' : 'none';
       node.classList.remove('entering');
     }

@@ -5,7 +5,7 @@ import { makeFX } from './fx.js';
 import { makeGame } from './rules.js';
 import { attachView, detachView, syncVisuals } from './view.js';
 import { makeInput } from './input.js';
-import { makeUI } from './ui.js';
+import { makeUI, leave } from './ui.js';
 import { makeNet } from './net.js';
 import { makePost, skyTexture, LOOK } from './post.js';
 import { makeJuice } from './juice.js';
@@ -14,6 +14,10 @@ import { makeReplay } from './replay.js';
 import { makeYardFX, applyYard } from './yards.js';
 import { arenaByKey, ARENAS, applyMapConfig } from './layout.js';
 import { makeKickball } from './kickball.js';
+import { makeFootball } from './football.js';
+import * as footbrain from './footbrain.js';
+import { buildGridiron, attachFootView, detachFootView, syncFootView } from './footview.js';
+import { makeFootControl } from './footcontrol.js';
 import { buildSandlot, attachKickView, detachKickView, syncKickView, setControlMarker } from './kickview.js';
 import { makeKickControl } from './kickcontrol.js';
 import { makeStoryUI } from './storyui.js';
@@ -124,6 +128,7 @@ const sfx = makeSound();
 
 // CFG is global and quick-match reads the same object, so a story mission has
 // to hand back exactly what it borrowed.
+const footCtl = makeFootControl();
 const CFG_BACKUP = { teamSize: CFG.match.teamSize, scoreToWin: CFG.match.scoreToWin,
                      duration: CFG.match.duration, respawn: CFG.tag.respawn,
                      fw: CFG.field.w, fh: CFG.field.h };
@@ -213,8 +218,8 @@ const net = makeNet({
   onStart: N => {
     S.mode = 'online';
     S.rematch = null;          // an online rematch is a new queue, not a replay
-    detachKickView();
-    document.body.classList.remove('kb');
+    detachKickView(); detachFootView();
+    document.body.classList.remove('kb', 'ft');
     useMap(N.map);
     N.world.colliders = world.colliders;          // prediction collides with the right map
     S.G = N.shadow;
@@ -246,8 +251,8 @@ let storyUI = null;
 function launchStory(cfg, stop) {
   S.mode = 'story'; S.storyReported = false;
   S.rematch = () => launchStory(cfg, stop);
-  detachKickView();
-  document.body.classList.remove('kb');
+  detachKickView(); detachFootView();
+  document.body.classList.remove('kb', 'ft');
   // A field override forces a rebuild: the finale plays this backyard at 60x41,
   // and reusing the standing 48x33 world let players run six metres past the
   // drawn fence while the shadow frustum stopped at the pickets.
@@ -280,8 +285,8 @@ const handlers = {
   onPractice(kit, arenaKey) {
     S.mode = 'practice';
     S.rematch = () => handlers.onPractice(kit, arenaKey);
-    detachKickView();
-    document.body.classList.remove('kb');
+    detachKickView(); detachFootView();
+    document.body.classList.remove('kb', 'ft');
     const A = arenaByKey(arenaKey);
     useMap(A.map);
     setYard(A.yard);
@@ -309,10 +314,35 @@ const handlers = {
     }
     storyUI.open();
   },
+  onFootball() {
+    S.mode = 'football';
+    S.rematch = () => handlers.onFootball();
+    detachView(); detachKickView(); detachFootView();
+    document.body.classList.remove('kb');
+    // the gridiron is its own park: size the global field so the camera lift
+    // and shadow frustum fit it, same trick as the sandlot
+    applyMapConfig(CFG, 'backyard', TEAMS);
+    const FB = CFG.football.field;
+    CFG.field.w = (FB.goalX + FB.endzone) * 2 + 4;
+    CFG.field.h = FB.width + 6;
+    world.dispose(); world = buildGridiron(scene); world.fx = fx;
+    fitShadowToField(); applyCamHeight(ui?.settings?.cam);
+    setYard('day');
+    const G = makeFootball(world, { seed: (Date.now() % 100000) | 0 });
+    G.setBrains(footbrain);
+    G._camera = camera;
+    attachFootView(G, scene);
+    S.G = G; S.viewAttached = true;
+    ui.bind(G);
+    document.body.classList.add('ft');
+    setCamMode('football');
+    camTgt.set(G.scrimmage, 0, 0);
+  },
+  onPlayCall(key) { if (S.mode === 'football' && S.G) footCtl.onPlayButton(key); },
   onKickball() {
     S.mode = 'kickball';
     S.rematch = () => handlers.onKickball();
-    detachView();
+    detachView(); detachFootView();
     // TEAMS matters here too: the benches are placed off the team base posts,
     // so without it a 5v5 match beforehand parks both dugouts at x=±9.6.
     applyMapConfig(CFG, 'backyard', TEAMS);   // the sandlot is a fixed 48x33 park
@@ -405,7 +435,8 @@ const ui = makeUI(handlers);
 function setPaused(on) {
   S.paused = !!on;
   const p = document.getElementById('pause');
-  p.style.display = on ? 'flex' : 'none';
+  if (!on) { leave(p, () => { if (!S.paused) p.style.display = 'none'; }); }
+  else p.style.display = 'flex';
   if (on) {
     document.getElementById('pausecard').querySelector('h1').textContent = 'PAUSED';
     document.getElementById('btnResume').style.display = '';
@@ -420,12 +451,13 @@ function quitToMenu() {
   if (S.mode === 'online') { location.reload(); return; }
   const wasStory = S.mode === 'story';
   const wasKb = S.mode === 'kickball';
-  detachView(); detachKickView();
+  const wasFt = S.mode === 'football';
+  detachView(); detachKickView(); detachFootView();
   S.G = null; S.viewAttached = false; S.rematch = null; S.mode = null;
   restoreCfg(); ui.setObjective(null);
   document.getElementById('over').style.display = 'none';
-  document.body.classList.remove('kb');
-  if (wasKb) { useMap('backyard', true); setYard('day'); }
+  document.body.classList.remove('kb', 'ft');
+  if (wasKb || wasFt) { useMap('backyard', true); setYard('day'); }
   setCamMode(ui.settings?.camera || 'broadcast');
   if (wasStory) storyUI.open(); else ui.toTitle();
 }
@@ -438,8 +470,8 @@ document.getElementById('btnRematch').onclick = () => {
 };
 document.getElementById('btnAgain').onclick = () => {
   sfx.click();
-  document.getElementById('over').style.display = 'none';
-  if (S.rematch) S.rematch(); else location.reload();
+  const o = document.getElementById('over');
+  leave(o, () => { o.style.display = 'none'; if (S.rematch) S.rematch(); else location.reload(); });
 };
 document.getElementById('btnOverMenu').onclick = () => { sfx.click(); quitToMenu(); };
 
@@ -447,9 +479,27 @@ document.getElementById('btnOverMenu').onclick = () => { sfx.click(); quitToMenu
 // stick is neutral before that happens
 addEventListener('visibilitychange', () => { if (document.hidden) net.idle?.(); });
 
+// Call Your Shots: during the huddle, drag from a receiver to draw his route.
+let ftDragging = false;
+const ftDrawable = () => S.mode === 'football' && S.G && !S.G.over &&
+  (S.G.phase === 'huddle' || S.G.phase === 'set') && S.G.player.team === S.G.possession;
+canvas.addEventListener('mousedown', e => {
+  if (!ftDrawable()) return;
+  const pt = worldCursor({});
+  if (e.button === 2) { footCtl.clearRoute(pt); return; }
+  if (e.button === 0) { footCtl.beginRouteDrag(pt); ftDragging = true; }
+});
+addEventListener('mousemove', () => {
+  if (ftDragging && ftDrawable()) footCtl.dragRoute(worldCursor({}));
+});
+addEventListener('mouseup', () => {
+  if (ftDragging) { footCtl.endRouteDrag(); ftDragging = false; }
+});
+canvas.addEventListener('contextmenu', e => { if (S.mode === 'football') e.preventDefault(); });
+
 const CAM_MODES = ['broadcast', 'baseline', 'fp'];
 addEventListener('keydown', e => {
-  if (e.code === 'KeyC' && S.G && S.mode !== 'kickball') { ui.setCamera(CAM_MODES[(CAM_MODES.indexOf(CAM.mode) + 1) % CAM_MODES.length]); }
+  if (e.code === 'KeyC' && S.G && S.mode !== 'kickball' && S.mode !== 'football') { ui.setCamera(CAM_MODES[(CAM_MODES.indexOf(CAM.mode) + 1) % CAM_MODES.length]); }
   if (!S.G) return;
   if (e.code === 'KeyP' && S.mode === 'practice' && !replay.playing) replay.start(S.G);
   if (e.code === 'Space' && replay.playing) replay.speed = replay.speed === 1 ? 0.5 : 1;
@@ -542,7 +592,7 @@ function setCamMode(mode) {
   CAM.mode = mode;
   const p = S.G?.player;
   if (mode === 'fp') { CAM.yaw = p ? p.aim : 0; CAM.pitch = 0.05; }
-  camera.fov = mode === 'fp' ? CFG.camFP.fov : mode === 'baseline' ? CFG.cam2k.fov : mode === 'kickball' ? 38 : 42;
+  camera.fov = mode === 'fp' ? CFG.camFP.fov : mode === 'baseline' ? CFG.cam2k.fov : mode === 'kickball' ? 38 : mode === 'football' ? 39 : 42;
   camera.updateProjectionMatrix();
   if (mode !== 'fp' && document.pointerLockElement === canvas) document.exitPointerLock();
 }
@@ -586,6 +636,25 @@ function placeCamera(dt) {
     const fx = Math.sin(CAM.yaw), fz = Math.cos(CAM.yaw);
     camera.position.set(p.x + fx * 0.25 + sx * 0.3, CFG.camFP.eye + bob + (p.roll ? -0.7 : 0), p.z + fz * 0.25 + sz * 0.3);
     camera.lookAt(camera.position.x + fx * Math.cos(CAM.pitch), camera.position.y + Math.sin(CAM.pitch), camera.position.z + fz * Math.cos(CAM.pitch));
+    return;
+  }
+  if (CAM.mode === 'football') {
+    // Sideline broadcast: the field runs along X, so the rig sits off +Z and
+    // tracks the ball down the yard. Shake advances here like kickball's.
+    const b = S.G?.ball;
+    const FB = CFG.football.field;
+    const wantX = b ? Math.max(-FB.goalX, Math.min(FB.goalX, b.x)) : 0;
+    const k2 = 1 - Math.exp(-3.4 * dt);
+    camTgt.x += (wantX - camTgt.x) * k2;
+    camTgt.z += ((b ? b.z * 0.3 : 0) - camTgt.z) * k2;
+    juice.updateShake(dt);
+    // The yard is 50m long and 30m wide, and this rig looks ACROSS it — so the
+    // WIDTH becomes screen depth. At the old 20.5m up / 25m back the near
+    // sideline sat under the lens and half a formation fell off the bottom of
+    // the frame. Backed off to put the near sideline just inside the near
+    // clip of the view cone, which frames all ten kids and the whole width.
+    camera.position.set(camTgt.x + juice.shake.x, 26, camTgt.z + 34 + juice.shake.z);
+    camera.lookAt(camTgt.x, 0.4, camTgt.z - 3);
     return;
   }
   if (CAM.mode === 'kickball') {
@@ -764,6 +833,15 @@ function frameBody() {
       kickCtl.setTaps(inp.taps || new Set());
       S.G.step(STEP, kickCtl.driver(S.G, inp, input.keys, S.G.player.team));
     }
+    else if (S.mode === 'football') {
+      // The throw is aimed at a point on the grass, so the driver needs the
+      // cursor in WORLD space, not screen space — and it needs dt, because
+      // charging is a held input measured in seconds.
+      inp.cursor = worldCursor(inp);
+      S.G.step(STEP, footCtl.driver(S.G, inp, input.keys, S.G.player.team, STEP));
+      S.G._steering = footCtl.steering;      // the view rings whoever you are driving
+      S.G._prompt = footCtl.prompt || '';
+    }
     else S.G.step(STEP, inp);
     acc -= STEP;
   }
@@ -776,6 +854,13 @@ function frameBody() {
     setControlMarker(S.G, kickCtl.steering);
     S.G._hint = kickCtl.hint;
     syncKickView(S.G, dt, alpha);
+    world.fx.update(dt); ambience.update(dt); placeCamera(dt); ui.update(dt); post.render();
+    return;
+  }
+  if (S.mode === 'football' && S.viewAttached) {
+    footSounds(S.G);
+    S.G._hint = footCtl.hint;
+    syncFootView(S.G, dt, alpha);
     world.fx.update(dt); ambience.update(dt); placeCamera(dt); ui.update(dt); post.render();
     return;
   }
@@ -836,6 +921,33 @@ function kickSounds(G) {
   }
 }
 
+const ftHeard = new WeakSet();
+function footSounds(G) {
+  for (const e of G.events || []) {
+    if (ftHeard.has(e)) continue; ftHeard.add(e);
+    switch (e.kind) {
+      case 'hike':       sfx.hut(1); break;
+      case 'throw':      sfx.spiral(0.9); break;
+      case 'catch':      sfx.snagBall(1); break;
+      case 'incomplete': sfx.whiff(0.8); break;
+      case 'tackle':     sfx.shove(1); sfx.whistle(0.8); juice.shakeFor(0.2, 0.16); break;
+      case 'sack':       sfx.shove(1.1); sfx.whistle(0.9); juice.shakeFor(0.3, 0.26); break;
+      case 'swat':       sfx.whiff(1); juice.shakeFor(0.14, 0.1); break;
+      case 'drop':       sfx.drop(0.9); break;
+      case 'divecatch':  sfx.snagBall(1.1); juice.shakeFor(0.22, 0.18); break;
+      case 'catchStride':sfx.snagBall(1.15); break;   // caught it in stride
+      case 'broke':      sfx.whiff(0.7); juice.shakeFor(0.16, 0.12); break;
+      case 'down':       sfx.whistle(0.7); break;
+      case 'turnover':   sfx.whistle(1); sfx.drop(1); break;
+      case 'int':        sfx.snagBall(1); sfx.whistle(1); juice.shakeFor(0.26, 0.22); break;
+      case 'td':         sfx.tdHorn(1); juice.shakeFor(0.3, 0.3); break;
+      case 'count':      sfx.count(+e.text || 1); break;
+      case 'go':         sfx.count(0); break;
+      case 'gameover':   sfx.gameover(G.over === G.player.team); break;
+    }
+  }
+}
+
 // gamepad: prompts + rumble
 let padSeen = false;
 setInterval(() => { const gp = navigator.getGamepads?.()[0]; const on = !!gp; if (on !== padSeen) { padSeen = on; ui.padHints(on); } }, 1000);
@@ -850,5 +962,5 @@ let artBuilt = false;
 // try once now; the frame loop retries until the canvas has a real size,
 // and stops trying the moment a match exists
 requestAnimationFrame(() => { if (!artBuilt && !S.G) artBuilt = ui.buildArt(); });
-window.DBG = { get storyUI() { return storyUI; }, get G() { return S.G; }, get world() { return world; }, scene, force: null, paused: false, net, LOOK, replay, CAM, showcase };
+window.DBG = { footCtl, get storyUI() { return storyUI; }, get G() { return S.G; }, get world() { return world; }, scene, force: null, paused: false, net, LOOK, replay, CAM, showcase };
 frame();

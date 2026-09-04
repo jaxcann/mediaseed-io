@@ -16,6 +16,71 @@ const SPECIAL_LABEL = { toss:'TOSS', roll:'ROLL', portal:'PORTAL', grapple:'HOOK
                         hurdle:'KICKFLIP', horn:'AIR HORN', spray:'HOSE', duck:'DUCK', none:'—' };
 
 const DEFAULTS = { vol: 0.5, ink: 1.0, cam: 23.5, arena: 'backyard-day', rumble: true, mute: false, camera: 'broadcast', kit: 'runner', diff: 'varsity' };
+// The one exit helper. Screens used to vanish on a hard display:none; they now
+// play a 200ms out before the caller hides them. Idempotent, so a double press
+// cannot fire the callback twice.
+export function leave(node, then) {
+  if (!node || node.classList.contains('leaving')) return;
+  node.classList.add('leaving');
+  setTimeout(() => { node.classList.remove('leaving'); then?.(); }, 200);
+}
+
+// ── the announcer ──────────────────────────────────────────
+// Two lanes, one occupant each. Big moments (a score, a pick, the final
+// whistle) STAMP centre-screen; running commentary toasts under the HUD. One
+// occupant per lane means a new call always replaces the old one mid-flight
+// instead of stacking a column of stale text.
+const STAMP = new Set(['score','td','int','turnover','homer','out','run','walk','overtime','gameover','over','swat','drop','divecatch','sack']);
+const SKIP  = new Set(['inning']);            // the inning card owns that beat
+const seenEv = new WeakSet();
+function announce(e) {
+  if (!e.text || SKIP.has(e.kind)) return;
+  const isCount = e.kind === 'count', isGo = e.kind === 'go', isStamp = STAMP.has(e.kind);
+  const lane = document.getElementById(isCount || isGo || isStamp ? 'stamp' : 'toasts');
+  if (!lane) return;
+  for (const old of [...lane.children]) { old.classList.add('out'); setTimeout(() => old.remove(), 160); }
+  const d = document.createElement('div');
+  d.className = 'toast ' + (isCount ? 'count' : isGo ? 'go' : isStamp ? 'stamp' : 'call')
+              + (e.text.length > 14 ? ' long' : '');
+  // the sim's colour is the FILL inside the ink stroke; count/go are yellow by CSS
+  if (!isCount && !isGo && e.color) d.style.color = '#' + e.color.toString(16).padStart(6, '0');
+  d.textContent = e.text;
+  lane.appendChild(d);
+  setTimeout(() => d.remove(), 2600);
+}
+export function drain(G) { for (const e of G?.events || []) if (!seenEv.has(e)) { seenEv.add(e); announce(e); } }
+
+// ── every live number ticks when it changes ──
+const lastVal = new Map();
+function bumpOnChange(id, value) {
+  const n = document.getElementById(id); if (!n) return false;
+  const v = String(value);
+  if (!lastVal.has(id)) { lastVal.set(id, v); n.textContent = v; return false; }
+  if (lastVal.get(id) === v) return false;
+  lastVal.set(id, v); n.textContent = v;
+  n.classList.remove('bump'); void n.offsetWidth; n.classList.add('bump');
+  return true;
+}
+const fmtClock = s => `${Math.floor(Math.max(0, s) / 60)}:${String(Math.floor(Math.max(0, s) % 60)).padStart(2, '0')}`;
+
+// ── the end card: one shape, four callers ──
+// CTF practice, online, kickball and football all used to hand-roll this and
+// only the online one had any content at all.
+function showOver({ winner, blue, red, sub = '', table = '', replay = false }) {
+  const o = document.getElementById('over');
+  if (o.style.display === 'flex') return;
+  const rib = o.querySelector('.ribbon');
+  rib.className = 'ribbon ' + winner;
+  rib.querySelector('h1').textContent = winner === 'draw' ? 'DRAW' : winner.toUpperCase() + ' WINS';
+  document.getElementById('ovBlue').textContent = blue;
+  document.getElementById('ovRed').textContent = red;
+  document.getElementById('overSub').textContent = sub;
+  document.getElementById('elo-table').innerHTML = table;
+  document.getElementById('btnWatch').style.display =
+    document.getElementById('btnClip').style.display = replay ? '' : 'none';
+  o.style.display = 'flex';
+}
+
 export function loadSettings() { try { return { ...DEFAULTS, ...JSON.parse(localStorage.bySettings || '{}') }; } catch { return { ...DEFAULTS }; } }
 
 export function makeUI(handlers) {
@@ -26,6 +91,14 @@ export function makeUI(handlers) {
   // ── settings ──
   const settings = loadSettings();
   const sp = el('settings');
+  // The controls card is a wall of keycaps you need for ten seconds and then
+  // never again. It tucks itself after 8s of play; H brings it back.
+  let hintT = null;
+  const armHint = () => {
+    clearTimeout(hintT);
+    el('hint').classList.remove('tucked');
+    hintT = setTimeout(() => el('hint').classList.add('tucked'), 8000);
+  };
   const save = () => { localStorage.bySettings = JSON.stringify(settings); handlers.onSettings?.(settings); };
   el('sVol').value = settings.vol; el('sInk').value = settings.ink; el('sCam').value = settings.cam;
   el('sRumble').checked = settings.rumble; el('sMute').checked = settings.mute;
@@ -52,6 +125,7 @@ export function makeUI(handlers) {
       else if (handlers.onEscape?.()) { /* consumed: pause toggled */ }
       else sp.classList.toggle('open');
     }
+    if (e.code === 'KeyH') { clearTimeout(hintT); el('hint').classList.toggle('tucked'); }
     if (e.code === 'KeyM') { settings.mute = !settings.mute; el('sMute').checked = settings.mute; save(); }
   });
   handlers.onSettings?.(settings);
@@ -92,6 +166,12 @@ export function makeUI(handlers) {
     handlers.onKickball();
   };
   el('btnStory').onclick = () => { mode = 'story'; document.body.classList.remove('title'); gate.style.display = 'none'; handlers.onStory(); };
+  el('btnFootball').onclick = () => {
+    mode = 'football'; document.body.classList.remove('title'); gate.style.display = 'none';
+    handlers.onFootball();
+  };
+  for (const b of document.querySelectorAll('.ftplay'))
+    b.onclick = () => handlers.onPlayCall?.(b.dataset.play);
 
   // leaderboard
   fetch('top').then(r => r.json()).then(rows => {
@@ -205,12 +285,12 @@ export function makeUI(handlers) {
   });
   el('btnCancelQ').onclick = () => { el('queue').style.display = 'none'; gate.style.display = 'flex'; handlers.onCancel(); };
 
-  const toastBox = el('toasts');
-  let shown = new Map();
 
   let api;
   api = {
-    bind(game) { G = game; },
+    bind(game) {
+      lastVal.clear();
+      armHint(); G = game; },
     bindCamera(fn) { setCamMode = fn; },
     setCamera(mode) { settings.camera = mode; el('sCamera').value = mode; save(); },
     portraits: {}, thumbs: {},
@@ -233,7 +313,7 @@ export function makeUI(handlers) {
       if (net.status === 'offline') {
         el('qstat').textContent = 'server unreachable — try CAPTURE THE FLAG vs bots';
         const b = el('btnOnline');
-        b.disabled = true; b.style.opacity = 0.45;
+        b.disabled = true; 
         b.querySelector('i') && (b.querySelector('i').textContent = 'offline — server not running');
       }
     },
@@ -244,18 +324,17 @@ export function makeUI(handlers) {
     },
     showEnd(net) {
       const m = net.end;
-      const o = el('over');
-      o.style.display = 'flex';
-      const canR = handlers.canReplay?.() !== false;
-      el('btnWatch').style.display = el('btnClip').style.display = canR ? '' : 'none';
-      const h = o.querySelector('h1');
-      h.textContent = m.winner === 'draw' ? 'DRAW' : m.winner.toUpperCase() + ' WINS';
-      h.style.color = m.winner === 'blue' ? '#3d7dff' : m.winner === 'red' ? '#ff4d4d' : '#fff';
-      el('elo-table').innerHTML = (m.ranked ? '' : '<div class="unranked">unranked match — bots on a team</div>') +
-        m.table.map(r =>
+      showOver({
+        winner: m.winner,
+        blue: m.score?.blue ?? G?.score?.blue ?? 0,
+        red: m.score?.red ?? G?.score?.red ?? 0,
+        sub: m.ranked ? 'ranked' : 'unranked — bots on a team',
+        table: m.table.map(r =>
           `<div class="erow ${r.team}"><span>${esc(r.name)}</span>` +
           `<b class="${r.delta >= 0 ? 'up' : 'down'}">${r.delta >= 0 ? '+' : ''}${m.ranked ? r.delta : '—'}</b>` +
-          `<i>${r.elo} · ${r.rank}</i></div>`).join('');
+          `<i>${r.elo} · ${r.rank}</i></div>`).join(''),
+        replay: handlers.canReplay?.() !== false,
+      });
     },
     settings,
     replayBanner(on, progress, speed) {
@@ -267,6 +346,9 @@ export function makeUI(handlers) {
       // kickball rewrote the hint and lit its own HUD; leaving it in place put a
       // frozen line score and baseball help text over the next CTF match
       el('kbhud').classList.remove('on');
+      el('fthud').classList.remove('on');
+      el('ftplays').classList.remove('on');
+      document.body.classList.remove('over');
       const h = el('hint');
       h.dataset.kb = '1';
       h.innerHTML = '<b>WASD</b> — move · <b>MOUSE</b> — aim<br><b>CLICK</b> — tag · reach grows with your speed<br><b>RIGHT-CLICK / E</b> — your special<br><b>SPACE</b> — dash · <b>CTRL</b> — walk<br><b>C</b> — camera · <b>P</b> — replay';
@@ -290,14 +372,20 @@ export function makeUI(handlers) {
       else if (!pad && h.dataset.kb === '0') { h.dataset.kb = '1'; h.innerHTML = '<b>WASD</b> — move · <b>MOUSE</b> — aim<br><b>CLICK</b> — tag · reach grows with your speed<br><b>RIGHT-CLICK / E</b> — your special<br><b>SPACE</b> — dash · <b>CTRL</b> — walk<br><b>C</b> — camera · <b>P</b> — replay'; }
     },
     update(dt) {
+      // Derived once, before the per-mode early returns: the live HUD hides
+      // itself whenever the end card is up, in every mode.
+      document.body.classList.toggle('over', el('over').style.display === 'flex');
       if (!G) return;
       if (mode === 'kickball') return updateKickHud(el, G);
+      if (mode === 'football') return updateFootHud(el, G, handlers);
       const p = G.player;
       const sp = Math.hypot(p.vx, p.vz);
-      el('sBlue').textContent = G.score.blue;
-      el('sRed').textContent  = G.score.red;
+      bumpOnChange('sBlue', G.score.blue);
+      bumpOnChange('sRed', G.score.red);
       const t = Math.max(0, G.time);
-      el('clock').textContent = `${Math.floor(t/60)}:${String(Math.floor(t%60)).padStart(2,'0')}`;
+      const ctxt = fmtClock(t);
+      el('clock').classList.toggle('low', t <= 30);
+      if (t <= 10) bumpOnChange('clock', ctxt); else el('clock').textContent = ctxt;
 
       for (const k of ['blue','red']) {
         const f = G.flags[k];
@@ -309,8 +397,7 @@ export function makeUI(handlers) {
       const pct = Math.min(1, sp / CFG.dash.maxSpeed);
       const bar = el('spd');
       bar.style.width = (pct * 100) + '%';
-      bar.style.background = sp > CFG.move.maxSpeed + 0.2
-        ? 'linear-gradient(90deg,#ffd94a,#ff7a3d)' : 'linear-gradient(90deg,#9fe870,#4fd1c5)';
+      bar.classList.toggle('hot', sp > CFG.move.maxSpeed + 0.2);
       el('spdnum').textContent = sp.toFixed(1);
 
       const cd = el('dashcd');
@@ -327,7 +414,9 @@ export function makeUI(handlers) {
         // say WHIFF for 0.26s after a tag that had just landed
         lp.textContent = ph === 'wind' ? 'WIND' : ph === 'active' ? 'TAG!'
                        : ph === 'recover' ? (p.lunge?.hit ? 'GOT HIM' : 'WHIFF') : 'LUNGE';
-        lp.className = 'pip' + (ph === 'active' ? ' on' : ph === 'recover' ? ' bad' : ph ? ' warn' : (p.lungeCd <= 0 ? ' on' : ''));
+        lp.className = 'pip' + (ph === 'active' ? ' on'
+          : ph === 'recover' ? (p.lunge?.hit ? ' good' : ' bad')
+          : ph ? ' warn' : (p.lungeCd <= 0 ? ' on' : ''));
       }
       const spip = el('specialpip');
       spip.textContent = SPECIAL_LABEL[p.special] || '—';
@@ -351,33 +440,49 @@ export function makeUI(handlers) {
         el('rspNum').textContent = Math.max(0, p.respawnT).toFixed(1);
       } else if (rsp.style.display !== 'none') rsp.style.display = 'none';
 
-      for (const e of G.events) {
-        if (!e.text) { shown.set(e, null); continue; }
-        if (!shown.has(e)) {
-          const d = document.createElement('div');
-          d.className = 'toast';
-          d.style.color = '#' + e.color.toString(16).padStart(6, '0');
-          d.textContent = e.text;
-          toastBox.appendChild(d);
-          shown.set(e, d);
-          setTimeout(() => d.remove(), 2400);
-        }
-      }
-      if (shown.size > 40) shown = new Map();
+      drain(G);
 
-      if (G.over && !document.getElementById('over').style.display.includes('flex') && mode === 'practice') {
-        const o = el('over');
-        o.style.display = 'flex';
-        const canR = handlers.canReplay?.() !== false;
-        el('btnWatch').style.display = el('btnClip').style.display = canR ? '' : 'none';
-        o.querySelector('h1').textContent =
-          G.over === 'draw' ? 'DRAW' : (G.over === 'blue' ? 'BLUE WINS' : 'RED WINS');
-        o.querySelector('h1').style.color = G.over === 'blue' ? '#3d7dff' : G.over === 'red' ? '#ff4d4d' : '#fff';
+      if (G.over && mode === 'practice') {
+        const ta = G.tally?.[G.player.team] || {};
+        showOver({ winner: G.over, blue: G.score.blue, red: G.score.red,
+          sub: `${ta.tags | 0} tags · ${ta.grabs | 0} grabs · ${fmtClock(G.time)} left`,
+          replay: handlers.canReplay?.() !== false });
       }
     },
   };
   return api;
 }
+function updateFootHud(el, G, handlers) {
+  const hud = el('fthud');
+  hud.classList.add('on');
+  bumpOnChange('ftBlue', G.score.blue);
+  bumpOnChange('ftRed', G.score.red);
+  if (bumpOnChange('ftDown', `DOWN ${G.down}`) && G.down === 1) {
+    const m = document.querySelector('.ftmid');
+    m.classList.add('flash'); setTimeout(() => m.classList.remove('flash'), 400);
+  }
+  el('ftToGo').textContent = `${Math.ceil(G.toGo())}M TO THE HOUSE`;
+  const mine = G.player.team === G.possession;
+  const calling = mine && (G.phase === 'huddle' || G.phase === 'set');
+  el('ftplays').classList.toggle('on', calling);
+  for (const b of document.querySelectorAll('.ftplay'))
+    b.classList.toggle('picked', b.dataset.play === G.play);
+  // Both bands show and hide with their content (the kbduty idiom). #ftHint
+  // used to live inside #ftplays, which is only .on while you are calling a
+  // play — so every live hint the control layer writes was painted into a
+  // hidden element, and G._prompt had no element at all.
+  const h = el('ftHint');
+  h.textContent = G._hint || '';
+  h.classList.toggle('on', !!G._hint);
+  const pr = el('ftPrompt');
+  pr.textContent = G._prompt || '';
+  pr.classList.toggle('on', !!G._prompt);
+  drain(G);   // DROPPED / BROKEN UP / TOUCHDOWN stamp through the announcer
+
+  if (G.over) showOver({ winner: G.over, blue: G.score.blue, red: G.score.red,
+    sub: `first to ${CFG.football.firstTo} · backyard rules`, replay: false });
+}
+
 const ordinal = n => n + (['th','st','nd','rd'][(n % 100 - 20) % 10] || ['th','st','nd','rd'][n % 100] || 'th');
 const OUT_DOTS = n => '●'.repeat(n) + '○'.repeat(Math.max(0, 2 - n));
 let kbLastHalf = '';
@@ -393,11 +498,11 @@ function updateKickHud(el, G) {
     }
     kbLastHalf = half;
   }
-  el('kbBlue').textContent = G.score.blue;
-  el('kbRed').textContent = G.score.red;
+  bumpOnChange('kbBlue', G.score.blue);
+  bumpOnChange('kbRed', G.score.red);
   el('kbInn').textContent = (G.half === 'top' ? '▲ ' : '▼ ') + G.inning;
-  el('kbCount').textContent = `${G.balls ?? 0}–${G.strikes ?? 0}`;
-  el('kbOuts').textContent = OUT_DOTS(G.outs ?? 0);
+  bumpOnChange('kbCount', `${G.balls ?? 0}–${G.strikes ?? 0}`);
+  bumpOnChange('kbOuts', OUT_DOTS(G.outs ?? 0));
   for (const n of el('kbhud').querySelectorAll('.kbbases i'))
     n.classList.toggle('on', !!G.runnerOn?.(+n.dataset.b));
 
@@ -433,22 +538,11 @@ function updateKickHud(el, G) {
                                : G.pitchT > G.arriveT + K.window ? 'LATE' : 'NOW';
     el('kbtiming').className = (off <= K.window) ? 'perfect' : '';
   }
-  const call = el('kbcall');
-  const ev = G.events?.[G.events.length - 1];
-  call.textContent = ev ? ev.text : '';
-  call.style.color = ev ? '#' + (ev.color ?? 0xfff8ea).toString(16).padStart(6, '0') : '#fff8ea';
+  drain(G);   // OUT / HOME RUN / WALK stamp through the announcer
 
-  if (G.over) {
-    const o = el('over');
-    if (o.style.display !== 'flex') {
-      o.style.display = 'flex';
-      // kickball is never recorded — dead replay buttons are worse than none
-      el('btnWatch').style.display = el('btnClip').style.display = 'none';
-      o.querySelector('h1').textContent = G.over === 'draw' ? 'TIE GAME' : G.over.toUpperCase() + ' WINS';
-      o.querySelector('h1').style.color = G.over === 'blue' ? '#3d7dff' : G.over === 'red' ? '#ff4d4d' : '#fff';
-      el('elo-table').innerHTML = boxScore(G);
-    }
-  }
+  // kickball is never recorded — dead replay buttons are worse than none
+  if (G.over) showOver({ winner: G.over, blue: G.score.blue, red: G.score.red,
+    sub: 'called after 3 · sandlot rules', table: boxScore(G), replay: false });
 }
 // A real line score: runs per inning, then the totals.
 function boxScore(G) {

@@ -1,0 +1,61 @@
+/* ── kickball HUD ────────────────────────────────────────────
+   Same score pill as CTF and football. The timing meter moves down to where
+   the ball actually arrives, and gets big enough that the perfect window is
+   a target rather than a hairline.                                          */
+
+#kbhud{display:none}
+#kbhud.on{display:contents}
+
+.kbmid b{font-size:var(--t-h3);letter-spacing:1.5px}
+.kbmid i{font-style:normal;font-size:var(--t-body);font-weight:700;color:var(--ink-2)}
+
+/* outs + bases share one chip on the band row */
+.kbrow{position:absolute;top:var(--row-b);left:0;right:0;margin:auto;width:max-content;
+  display:flex;align-items:center;gap:16px;padding:6px 16px;font-size:var(--t-small);
+  font-weight:700;letter-spacing:2px;color:var(--ink);background:var(--paper);
+  border:var(--bd) solid var(--ink);border-radius:var(--r-pill);box-shadow:var(--sh-chip);
+  z-index:var(--z-hudmode)}
+.kbouts{display:flex;align-items:center;gap:8px}
+.kbouts em{font-style:normal;font-size:var(--t-lead);letter-spacing:3px;color:var(--red-ink)}
+.kbbases{display:flex;gap:6px}
+.kbbases i{width:15px;height:15px;transform:rotate(45deg);border-radius:3px;
+  background:var(--white);border:var(--bd-chip) solid var(--ink);transition:background var(--d-quick)}
+.kbbases i.on{background:var(--yellow)}
+
+/* "here is your job right now" */
+#kbduty{position:absolute;left:0;right:0;bottom:calc(var(--dock) + 8px);margin:auto;width:max-content;
+  display:none;font-size:var(--t-h3);font-weight:700;letter-spacing:1px;padding:8px 20px;
+  background:var(--yellow);color:var(--ink);border:var(--bd) solid var(--ink);
+  border-radius:var(--r-card);box-shadow:var(--sh-card);z-index:var(--z-hudmode)}
+#kbduty.on{display:block}
+
+/* the timing meter, at the plate instead of pinned under the score */
+#kbmeter{position:absolute;left:0;right:0;bottom:calc(var(--dock) + 82px);margin:auto;
+  width:min(360px,60vw);height:30px;display:none;overflow:hidden;border-radius:15px;
+  z-index:var(--z-hudmode);animation:riseIn var(--d-pop) var(--ease-out) both}
+#kbmeter.on{display:block}
+#kbmeter .band{position:absolute;top:0;bottom:0;min-width:28px;background:var(--green);opacity:.9}
+#kbmeter .sweep{position:absolute;top:-3px;bottom:-3px;width:6px;background:var(--cream);
+  border-radius:3px;box-shadow:0 0 0 2px var(--ink)}
+#kbpwrap{position:absolute;left:0;right:0;bottom:calc(var(--dock) + 124px);margin:auto;width:max-content;
+  display:none;align-items:center;gap:14px;z-index:var(--z-hudmode)}
+#kbmeter.on ~ #kbpwrap{display:flex}
+#kbtiming{font-size:var(--t-h2);font-weight:700;letter-spacing:3px;color:var(--cream);
+  min-width:96px;text-align:center;-webkit-text-stroke:2px var(--ink);paint-order:stroke fill;
+  text-shadow:0 3px 0 var(--ink)}
+#kbtiming.perfect{color:var(--green);animation:bump .3s var(--ease-pop)}
+#kbpbar{width:180px;height:16px;background:var(--ink);border:var(--bd) solid var(--cream);
+  border-radius:10px;overflow:hidden}
+#kbpower{height:100%;width:0;border-radius:6px;transition:width .05s linear;background:var(--yellow)}
+#kbpower.hi{background:var(--green)} #kbpower.mid{background:var(--yellow)} #kbpower.lo{background:var(--red-soft)}
+
+#kbcall{display:none}            /* the announcer's lanes own calls now */
+
+/* the half-inning card */
+#kbinning{position:absolute;left:0;right:0;top:calc(var(--row-f) - 50px);margin:auto;width:max-content;
+  display:none;flex-direction:column;align-items:center;gap:6px;padding:18px 44px;text-align:center;
+  opacity:0;z-index:var(--z-hudmode);background:var(--cream);color:var(--ink);
+  border:var(--bd-hero) solid var(--ink);border-radius:var(--r-hero);box-shadow:var(--sh-hero)}
+#kbinning.on{display:flex;animation:holdCard var(--d-inning) var(--ease-pop) forwards}
+#kbinning b{font-size:var(--t-display);letter-spacing:4px;line-height:1}
+#kbinning i{font-style:normal;font-size:var(--t-small);letter-spacing:4px;color:var(--ink-3)}

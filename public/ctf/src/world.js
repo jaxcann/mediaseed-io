@@ -774,7 +774,9 @@ function scatter(root, colliders) {
   return made.slice(0, 3);        // tufts + dandelion heads + stems bend; stones don't
 }
 
-function makeProp(kind, hw = 1, hh = 1) {
+// Exported for the football view: the gridiron borrows the goalpost, chair
+// and cooler props rather than growing lookalike copies of them.
+export function makeProp(kind, hw = 1, hh = 1) {
   switch (kind) {
     case 'tree': {
       const g = new THREE.Group();

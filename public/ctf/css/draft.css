@@ -1,0 +1,71 @@
+/* ── character select ────────────────────────────────────────
+   Was four absolutely-positioned boxes plus a media query that hid the
+   SPECIAL card on small screens. One grid instead: the columns size
+   themselves, the roster wraps, and the READY label stops running off the
+   right edge because the kit name is now a sub-line inside the button.   */
+
+#draft{position:absolute;inset:0;pointer-events:auto;background:var(--draft-scrim)}
+.draftgrid{width:100%;height:100%;display:grid;gap:var(--s4) var(--s5);
+  grid-template-columns:minmax(0,1fr) minmax(260px,304px);
+  grid-template-rows:minmax(0,1fr) auto auto;
+  padding:max(84px,8vh) 3vw 5vh 4vw}          /* 84px clears the gear + its halo */
+
+#splash{grid-area:1/1;align-self:start;max-width:min(520px,44vw);min-height:0;color:var(--ink)}
+#bigThe{font-size:var(--t-h3);letter-spacing:8px;font-weight:700;margin-left:4px;color:var(--ink);
+  opacity:.75;text-shadow:0 2px 0 rgba(255,248,234,.55)}
+#bigName{font-size:var(--t-kitname);line-height:.92;font-weight:700;letter-spacing:-1px;color:var(--yellow)}
+#blurb{margin-top:16px;font-size:var(--t-body);font-weight:600;line-height:1.4;
+  display:inline-block;padding:10px 14px;border-radius:var(--r-pill)}
+
+/* stat bars were 14x9 pills at 12% opacity — unreadable. Filled cells are ink
+   on yellow, empty cells are a visible well. */
+.stats{display:flex;gap:20px;margin-top:16px}
+.stats div{display:flex;flex-direction:column;gap:6px}
+.stats span{font-size:var(--t-eyebrow);letter-spacing:var(--track-eyebrow);font-weight:700;color:var(--ink);
+  text-shadow:0 2px 0 rgba(255,248,234,.55)}
+.stats em{display:flex;gap:4px}
+.stats em i,.stats em b{width:20px;height:12px;border-radius:4px;
+  border:var(--bd-chip) solid var(--ink);background:var(--yellow);box-shadow:0 2px 0 var(--ink-a35)}
+.stats em b{background:var(--ink-a15);box-shadow:none}
+
+#special{grid-area:2/1;justify-self:start;max-width:min(520px,44vw);padding:12px 16px}
+#special .sphead{font-size:var(--t-eyebrow);letter-spacing:var(--track-eyebrow);color:var(--cream-3)}
+#special .sphead b{color:var(--yellow)}
+#special p{font-size:var(--t-body);line-height:1.45;margin-top:6px;font-weight:500}
+
+#roster{grid-area:3/1;display:flex;flex-wrap:wrap;gap:var(--s3);align-items:flex-end}
+.tile{position:relative;width:clamp(56px,5.4vw,74px);aspect-ratio:1;height:auto;padding:0;overflow:hidden;
+  background:var(--cream);border:var(--bd) solid var(--ink);border-radius:var(--r-card);
+  box-shadow:var(--sh-card);opacity:1}
+.tile img{width:100%;height:100%;object-fit:cover;display:block}
+.tile span{position:absolute;left:5px;top:4px;font-size:var(--t-eyebrow);font-weight:700;color:var(--ink);
+  background:var(--cream);border-radius:6px;padding:0 5px;border:var(--bd-chip) solid var(--ink)}
+.tile:hover{transform:translateY(-4px)}
+.tile.on{transform:translateY(-6px);background:var(--yellow);box-shadow:var(--ring);z-index:1;
+  animation:bump .32s var(--ease-pop)}
+#splash.in>*{animation:riseIn .42s var(--ease-pop) both}
+#splash.in>*:nth-child(2){animation-delay:.04s}
+#splash.in>*:nth-child(3){animation-delay:.1s}
+#splash.in>*:nth-child(4){animation-delay:.16s}
+
+/* the arena column */
+#side{grid-area:1/2/4/3;display:flex;flex-direction:column;gap:var(--s3);min-height:0}
+#side h2{font-size:var(--t-h2);letter-spacing:var(--track-head);color:var(--cream);text-shadow:0 3px 0 var(--ink)}
+#arenas{display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:max-content;align-content:start;
+  gap:10px;flex:1;min-height:0;overflow-y:auto;padding:8px;margin:-8px;scrollbar-width:thin}
+.ybtn{padding:0;display:flex;flex-direction:column;overflow:visible;font-family:inherit;font-weight:700;
+  background:var(--cream);color:var(--ink);border:var(--bd) solid var(--ink);
+  border-radius:var(--r-pill);box-shadow:var(--sh-chip);opacity:1}
+.ybtn img{width:100%;aspect-ratio:16/10;object-fit:cover;display:block;
+  border-bottom:var(--bd) solid var(--ink);border-radius:9px 9px 0 0}
+.ybtn span{display:block;padding:7px 6px;font-size:var(--t-small);letter-spacing:.5px;text-align:center}
+.ybtn:hover{transform:translateY(-2px)}
+.ybtn.on{background:var(--yellow);transform:translateY(-3px);box-shadow:var(--ring)}
+#yardnote{font-size:var(--t-eyebrow);letter-spacing:1px;font-style:normal;text-align:center;color:var(--cream-2)}
+#side .keys{font-size:var(--t-eyebrow);letter-spacing:1px;text-align:center;color:var(--cream-2)}
+
+.readyrow{display:flex;gap:10px;margin-top:auto;align-items:stretch}
+.readyrow #btnReady{flex:1;min-width:0;flex-direction:column;gap:2px;line-height:1.05;padding:10px 18px}
+#readyName{display:block;font-size:var(--t-eyebrow);letter-spacing:2px;font-weight:700;color:var(--ink-2);
+  text-transform:uppercase;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#btnReady.go{animation:bump .32s var(--ease-pop)}
