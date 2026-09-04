@@ -14,6 +14,10 @@ const nextConfig = {
       // fully offline (practice, story, kickball); its online mode politely
       // grays itself out when there is no match server behind the path
       { source: "/ctf", destination: "/ctf/index.html" },
+      // MAGIC — STORY's arena build. Same arrangement: a static Vite bundle in
+      // public/magic, built with base=/magic/ so its assets and character
+      // models resolve under the subpath rather than at the site root.
+      { source: "/magic", destination: "/magic/index.html" },
     ];
   },
   async redirects() {

@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>STORY — movement core</title>
+  <script type="module" crossorigin src="/magic/assets/index-CZkA_V8L.js"></script>
+  <link rel="stylesheet" crossorigin href="/magic/assets/index-DaLdy0mD.css">
+</head>
+<body>
+  <canvas id="game"></canvas>
+  <div id="hud">
+    <div id="badge">STORY <span>v0.6 · the run</span></div>
+    <div id="hint"><b>Click to play</b>&ensp;·&ensp;<b>WASD</b> move&ensp;·&ensp;<b>Space</b> jump&ensp;·&ensp;<b>Shift</b> dash&ensp;·&ensp;<b>LMB</b>/<b>RMB</b> cast&ensp;·&ensp;<b>scroll</b> swaps magic&ensp;·&ensp;hold <b>Q</b> for the wheel</div>
+    <div id="combo"><b id="combo-n"></b><i id="combo-tag"></i></div>
+    <div id="school"><b id="school-name"></b><i id="school-keys"></i></div>
+    <div id="prompt"></div>
+    <div id="banner">
+      <i id="banner-round"></i>
+      <b id="banner-name"></b>
+      <em id="banner-sub"></em>
+    </div>
+    <div id="foe">
+      <b id="foe-name"></b>
+      <div id="foe-bar"><span id="foe-fill"></span></div>
+    </div>
+    <div id="purse"><b id="coins">0</b><i>coins</i><em id="best"></em></div>
+    <div id="callout"></div>
+    <div id="shop">
+      <h3>THE MAGIC HUT</h3>
+      <ul id="shop-list"></ul>
+      <p id="shop-foot"></p>
+    </div>
+    <div id="vitals">
+      <div id="hp-bar"><span id="hp-fill"></span></div>
+      <i id="hp-label">VITALITY</i>
+    </div>
+    <div id="wheel">
+      <svg viewBox="-260 -260 520 520" width="520" height="520">
+        <defs>
+          <radialGradient id="wheel-veil">
+            <stop offset="0%" stop-color="rgba(14,9,22,0.72)" />
+            <stop offset="62%" stop-color="rgba(14,9,22,0.5)" />
+            <stop offset="100%" stop-color="rgba(14,9,22,0)" />
+          </radialGradient>
+        </defs>
+        <circle r="250" fill="url(#wheel-veil)" />
+        <g id="wheel-ring-a" class="wheel-runes"></g>
+        <g id="wheel-ring-b" class="wheel-runes dim"></g>
+        <circle class="wheel-circle" r="186" />
+        <circle class="wheel-circle faint" r="212" />
+        <circle class="wheel-circle faint" r="74" />
+        <g id="wheel-nodes"></g>
+        <text id="wheel-name" y="8" text-anchor="middle"></text>
+        <text id="wheel-blurb" y="228" text-anchor="middle"></text>
+        <text id="wheel-primary" y="248" text-anchor="middle"></text>
+        <text id="wheel-secondary" y="263" text-anchor="middle"></text>
+      </svg>
+    </div>
+    <svg id="reticle" viewBox="0 0 64 64" width="64" height="64">
+      <circle class="ret-track" cx="32" cy="32" r="15" />
+      <circle id="ret-flow" cx="32" cy="32" r="15" transform="rotate(-90 32 32)" />
+      <circle id="ret-charge" cx="32" cy="32" r="9" transform="rotate(-90 32 32)" />
+      <circle id="ret-dot" cx="32" cy="32" r="2.1" />
+    </svg>
+    <div id="fps"></div>
+    <div id="speed"></div>
+    <div id="toast"></div>
+  </div>
+</body>
+</html>
