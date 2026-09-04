@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>STORY — movement core</title>
-  <script type="module" crossorigin src="/magic/assets/index-CZkA_V8L.js"></script>
-  <link rel="stylesheet" crossorigin href="/magic/assets/index-DaLdy0mD.css">
+  <script type="module" crossorigin src="/magic/assets/index-CpT_AhsU.js"></script>
+  <link rel="stylesheet" crossorigin href="/magic/assets/index-Do-n0Y4U.css">
 </head>
 <body>
   <canvas id="game"></canvas>
@@ -13,8 +13,22 @@
     <div id="badge">STORY <span>v0.6 · the run</span></div>
     <div id="hint"><b>Click to play</b>&ensp;·&ensp;<b>WASD</b> move&ensp;·&ensp;<b>Space</b> jump&ensp;·&ensp;<b>Shift</b> dash&ensp;·&ensp;<b>LMB</b>/<b>RMB</b> cast&ensp;·&ensp;<b>scroll</b> swaps magic&ensp;·&ensp;hold <b>Q</b> for the wheel</div>
     <div id="combo"><b id="combo-n"></b><i id="combo-tag"></i></div>
-    <div id="school"><b id="school-name"></b><i id="school-keys"></i></div>
+    <div id="player">
+      <div id="pl-top">
+        <svg id="pl-sigil" viewBox="0 0 100 100" width="46" height="46"><path id="pl-glyph"/></svg>
+        <div id="pl-text">
+          <b id="school-name"></b>
+          <i id="school-keys"></i>
+        </div>
+      </div>
+      <div id="pl-bars">
+        <div class="pl-bar hp"><span id="hp-fill2"></span><em>HEALTH</em><u id="hp-num"></u></div>
+        <div class="pl-bar fl"><span id="fl-fill"></span><em>FLOW</em></div>
+      </div>
+      <div id="pl-slots"></div>
+    </div>
     <div id="prompt"></div>
+    <div id="switch"><svg viewBox="0 0 100 100" width="34" height="34"><path id="sw-glyph"/></svg><b id="sw-name"></b></div>
     <div id="banner">
       <i id="banner-round"></i>
       <b id="banner-name"></b>
@@ -27,9 +41,15 @@
     <div id="purse"><b id="coins">0</b><i>coins</i><em id="best"></em></div>
     <div id="callout"></div>
     <div id="shop">
-      <h3>THE MAGIC HUT</h3>
-      <ul id="shop-list"></ul>
-      <p id="shop-foot"></p>
+      <div id="shop-panel">
+        <header>
+          <span class="shop-mark">✦</span>
+          <h3>THE MAGIC HUT</h3>
+          <span id="shop-purse"></span>
+        </header>
+        <ul id="shop-list"></ul>
+        <p id="shop-foot"></p>
+      </div>
     </div>
     <div id="vitals">
       <div id="hp-bar"><span id="hp-fill"></span></div>
