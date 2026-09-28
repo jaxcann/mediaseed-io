@@ -5,7 +5,7 @@
 // descriptions, and URLs are hidden in the UI when empty, so never invent them.
 // Files live in /public/media/reels/<id>.mp4 (810x1440 H.264) + <id>.jpg poster.
 
-export type ReelClient = "VSA" | "View Finders" | "Other";
+export type ReelClient = "VSA" | "View Finders" | "Personal" | "Other";
 export type ReelPlatform = "Instagram" | "TikTok" | "YouTube";
 
 export type Reel = {
@@ -22,6 +22,19 @@ export type Reel = {
 };
 
 export const reels: Reel[] = [
+  {
+    id: "jax-chia",
+    client: "Personal",
+    title: "Giant chia pet",
+    description:
+      "Hydroseeding a chia pet the size of a car. My own account: 25,000 followers and 1.9 million likes across 18 videos.",
+    views: 4000000,
+    platform: "TikTok",
+    url: "https://www.tiktok.com/@jaxcann/video/6956328449237634310",
+    src: "/media/reels/jax-chia.mp4",
+    poster: "/media/reels/jax-chia.jpg",
+    date: "Apr 2021",
+  },
   {
     id: "vf-branson",
     client: "View Finders",
@@ -72,6 +85,30 @@ export const reels: Reel[] = [
     src: "/media/reels/lemurs.mp4",
     poster: "/media/reels/lemurs.jpg",
     date: "",
+  },
+  {
+    id: "jax-senate",
+    client: "Personal",
+    title: "Georgia Senate race",
+    description: "A one-take on the Georgia runoff. 360,000 views and 98,000 likes.",
+    views: 360900,
+    platform: "TikTok",
+    url: "https://www.tiktok.com/@jaxcann/video/6910650528288574725",
+    src: "/media/reels/jax-senate.mp4",
+    poster: "/media/reels/jax-senate.jpg",
+    date: "Dec 2020",
+  },
+  {
+    id: "jax-hydroseed",
+    client: "Personal",
+    title: "Been a minute",
+    description: "Back on the hydroseeder. Satisfying-content format, 334,000 views.",
+    views: 334800,
+    platform: "TikTok",
+    url: "https://www.tiktok.com/@jaxcann/video/6978190963806194949",
+    src: "/media/reels/jax-hydroseed.mp4",
+    poster: "/media/reels/jax-hydroseed.jpg",
+    date: "Jun 2021",
   },
   {
     id: "vsa-ultrasound-babies",

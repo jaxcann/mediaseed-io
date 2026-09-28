@@ -18,7 +18,7 @@ export { reels };
 export type { Reel, ReelClient, ReelPlatform } from "@/components/reels";
 
 type Filter = "All" | ReelClient;
-const CLIENT_ORDER: ReelClient[] = ["VSA", "View Finders", "Other"];
+const CLIENT_ORDER: ReelClient[] = ["VSA", "View Finders", "Personal", "Other"];
 // Only clients that actually have reels get a pill; with one client there is nothing to filter.
 const FILTERS: Filter[] = ["All", ...CLIENT_ORDER.filter((c) => reels.some((r) => r.client === c))];
 
