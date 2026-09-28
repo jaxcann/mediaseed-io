@@ -87,18 +87,6 @@ export const reels: Reel[] = [
     date: "",
   },
   {
-    id: "jax-senate",
-    client: "Personal",
-    title: "Georgia Senate race",
-    description: "A one-take on the Georgia runoff. 360,000 views and 98,000 likes.",
-    views: 360900,
-    platform: "TikTok",
-    url: "https://www.tiktok.com/@jaxcann/video/6910650528288574725",
-    src: "/media/reels/jax-senate.mp4",
-    poster: "/media/reels/jax-senate.jpg",
-    date: "Dec 2020",
-  },
-  {
     id: "jax-hydroseed",
     client: "Personal",
     title: "Been a minute",
