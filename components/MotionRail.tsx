@@ -26,6 +26,8 @@ export type MotionClip = {
   client: string;
   webm?: string;
   mov?: string;
+  /** opaque clips (no alpha): H.264 fallback for Safari */
+  mp4?: string;
   poster?: string;
   /** dark: ink glass plate, for white or light logos that would vanish on cream */
   tone?: "light" | "dark";
@@ -35,6 +37,14 @@ export type MotionClip = {
 //   public/media/motion/<id>.webm, <id>.mov, <id>.png
 export const motionClips: MotionClip[] = [
   {
+    id: "cgm",
+    title: "Chris Greer Media",
+    client: "Logo animation",
+    webm: "/media/motion/cgm.webm",
+    mov: "/media/motion/cgm.mov",
+    poster: "/media/motion/cgm.png",
+  },
+  {
     id: "oconee",
     title: "Visit Oconee County",
     client: "Logo animation",
@@ -43,11 +53,64 @@ export const motionClips: MotionClip[] = [
     poster: "/media/motion/oconee.png",
     tone: "dark",
   },
-  { id: "logo-02", title: "Logo animation 02", client: "Client", webm: "", mov: "", poster: "" },
-  { id: "logo-03", title: "Logo animation 03", client: "Client", webm: "", mov: "", poster: "" },
-  { id: "logo-04", title: "Logo animation 04", client: "Client", webm: "", mov: "", poster: "" },
-  { id: "logo-05", title: "Logo animation 05", client: "Client", webm: "", mov: "", poster: "" },
-  { id: "logo-06", title: "Logo animation 06", client: "Client", webm: "", mov: "", poster: "" },
+  {
+    id: "artful-hands",
+    title: "Artful Hands",
+    client: "Logo animation",
+    webm: "/media/motion/artful-hands.webm",
+    mov: "/media/motion/artful-hands.mov",
+    poster: "/media/motion/artful-hands.png",
+  },
+  {
+    id: "nose-nuzzle",
+    title: "Georgia Safari Conservation Park",
+    client: "Logo animation",
+    webm: "/media/motion/nose-nuzzle.webm",
+    mov: "/media/motion/nose-nuzzle.mov",
+    poster: "/media/motion/nose-nuzzle.png",
+  },
+  {
+    id: "oconee-state",
+    title: "Visit Oconee County, state mark",
+    client: "Logo animation",
+    webm: "/media/motion/oconee-state.webm",
+    mov: "/media/motion/oconee-state.mov",
+    poster: "/media/motion/oconee-state.png",
+    tone: "dark",
+  },
+  {
+    id: "bird-brass",
+    title: "Bird & Brass",
+    client: "Logo animation",
+    webm: "/media/motion/bird-brass.webm",
+    mp4: "/media/motion/bird-brass.mp4",
+    poster: "/media/motion/bird-brass.jpg",
+  },
+  {
+    id: "ocaf",
+    title: "OCAF",
+    client: "Logo animation",
+    webm: "/media/motion/ocaf.webm",
+    mov: "/media/motion/ocaf.mov",
+    poster: "/media/motion/ocaf.png",
+  },
+  {
+    id: "oconee-frame",
+    title: "Visit Oconee County, framed",
+    client: "Logo animation",
+    webm: "/media/motion/oconee-frame.webm",
+    mov: "/media/motion/oconee-frame.mov",
+    poster: "/media/motion/oconee-frame.png",
+    tone: "dark",
+  },
+  {
+    id: "red-dots",
+    title: "Growth map",
+    client: "Motion graphics",
+    webm: "/media/motion/red-dots.webm",
+    mp4: "/media/motion/red-dots.mp4",
+    poster: "/media/motion/red-dots.jpg",
+  },
 ];
 
 /** Width in px of the edge fade. It shrinks to zero as the rail reaches either end. */
@@ -191,6 +254,7 @@ function Plate({
             {clip.webm && (
               <source src={clip.webm} type='video/webm; codecs="vp9"' />
             )}
+            {clip.mp4 && <source src={clip.mp4} type="video/mp4" />}
           </video>
 
           {reduced && (
@@ -224,7 +288,7 @@ function Plate({
 }
 
 export function MotionRail({ items = motionClips }: { items?: MotionClip[] }) {
-  const clips = items.filter((c) => c.webm || c.mov);
+  const clips = items.filter((c) => c.webm || c.mov || c.mp4);
   const reduced = useReducedMotion();
   const railRef = useRef<HTMLUListElement>(null);
   const drag = useRef({

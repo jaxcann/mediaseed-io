@@ -12,6 +12,7 @@ import { CaseStudies } from "@/components/CaseStudies";
 import dynamic from "next/dynamic";
 import { reels } from "@/components/reels";
 import { MotionRail } from "@/components/MotionRail";
+import { Longform } from "@/components/Longform";
 import {
   FairwaysFeature,
   GameCard,
@@ -139,6 +140,8 @@ export default function Page() {
         <CaseStudies />
 
         {reels.length > 0 && <ReelsShowcase />}
+
+        <Longform />
 
         {/* ── MOTION & LOGO ANIMATION ──────────────────────────────────── */}
         <section
